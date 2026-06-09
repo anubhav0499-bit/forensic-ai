@@ -1,0 +1,118 @@
+# ============================================================
+# FORENSIC AI - Multi-Agent Forensic Accounting Platform
+# Requirements File
+# ============================================================
+
+# Core Framework
+fastapi>=0.110.0
+uvicorn>=0.27.0
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+
+# Agent Framework
+langgraph>=0.1.0
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-core>=0.2.0
+
+# LLM Backends — Cloud Providers (lightweight, install only what you use)
+openai>=1.35.0              # OpenAI + Groq + LM Studio + OpenRouter (all OpenAI-compatible)
+anthropic>=0.31.0           # Anthropic Claude
+google-generativeai>=0.7.0  # Google Gemini (free tier available)
+
+# LLM Backends — Local Inference (heavy; skip when using cloud APIs)
+transformers>=4.40.0
+accelerate>=0.29.0
+bitsandbytes>=0.43.0        # 4-bit quantization (GPU only)
+torch>=2.2.0
+tokenizers>=0.19.0
+
+# Embeddings
+sentence-transformers>=2.7.0
+FlagEmbedding>=1.2.5
+
+# Vector Database
+chromadb>=0.5.0
+
+# BM25 Retrieval
+rank_bm25>=0.2.2
+
+# Document Processing
+PyMuPDF>=1.24.0
+pdfplumber>=0.11.0
+camelot-py[cv]>=0.11.0
+tabula-py>=2.9.0
+beautifulsoup4>=4.12.0
+lxml>=5.1.0
+html2text>=2020.1.16
+
+# OCR
+pytesseract>=0.3.10
+easyocr>=1.7.1
+Pillow>=10.3.0
+pdf2image>=1.17.0
+
+# Data Processing
+pandas>=2.2.0
+numpy>=1.26.0
+scipy>=1.12.0
+scikit-learn>=1.4.0
+openpyxl>=3.1.0
+
+# Databases
+duckdb>=0.10.0
+sqlalchemy>=2.0.0
+
+# HTTP / Web Scraping
+httpx>=0.27.0
+requests>=2.31.0
+aiohttp>=3.9.0
+playwright>=1.43.0
+selenium>=4.20.0
+webdriver-manager>=4.0.1
+
+# NLP
+spacy>=3.7.0
+nltk>=3.8.0
+textblob>=0.18.0
+
+# Financial Data
+yfinance>=0.2.38
+pandas-datareader>=0.10.0
+
+# Visualization
+plotly>=5.21.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+kaleido>=0.2.1
+
+# Report Generation
+python-docx>=1.1.0
+reportlab>=4.1.0
+fpdf2>=2.7.0
+python-pptx>=0.6.23
+jinja2>=3.1.0
+weasyprint>=61.2
+
+# Frontend
+streamlit>=1.35.0
+streamlit-extras>=0.4.0
+
+# Utilities
+tqdm>=4.66.0
+rich>=13.7.0
+loguru>=0.7.0
+tenacity>=8.3.0
+arrow>=1.3.0
+humanize>=4.9.0
+pycountry>=23.12.11
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.25.0
+
+# Async Support
+asyncio-mqtt>=0.16.0
+aiofiles>=23.2.1
+
+# Testing (optional)
+pytest>=8.1.0
+pytest-asyncio>=0.23.0

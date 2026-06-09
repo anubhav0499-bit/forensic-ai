@@ -1,0 +1,48 @@
+# ─────────────────────────────────────────────────────────────────────
+# FORENSIC AI — Minimal Requirements (Colab / Quick Start)
+# Uses free cloud API (Groq or Gemini) — no GPU, no Ollama needed.
+#
+# Install: pip install -r requirements-minimal.txt
+# Then:    Set GROQ_API_KEY or GOOGLE_API_KEY in your environment / Colab secrets
+# ─────────────────────────────────────────────────────────────────────
+
+# LLM (pick one free option — openai package covers Groq too)
+openai>=1.35.0              # Groq, LM Studio, OpenRouter (all OpenAI-compatible)
+google-generativeai>=0.7.0  # Google Gemini
+anthropic>=0.31.0           # Anthropic Claude (optional)
+
+# Core
+python-dotenv>=1.0.0
+loguru>=0.7.2
+httpx>=0.27.0
+requests>=2.31.0
+
+# Data
+yfinance>=0.2.40
+pandas>=2.1.0
+numpy>=1.26.0
+beautifulsoup4>=4.12.3
+
+# RAG
+sentence-transformers>=3.0.0
+chromadb>=0.5.0
+rank-bm25>=0.2.2
+
+# Document Processing
+pdfplumber>=0.11.0
+python-docx>=1.1.0
+openpyxl>=3.1.2
+python-pptx>=0.6.23
+reportlab>=4.2.0
+Pillow>=10.3.0
+
+# Database
+duckdb>=1.0.0
+
+# UI (optional — skip if CLI only)
+streamlit>=1.36.0
+plotly>=5.22.0
+
+# Utilities
+tqdm>=4.66.0
+tenacity>=8.3.0
