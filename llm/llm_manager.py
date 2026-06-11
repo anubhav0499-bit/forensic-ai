@@ -2,10 +2,10 @@
 LLM Manager — Universal multi-provider interface
 =================================================
 Provider cascade (auto mode):
-  1. Groq          — free API, fastest inference, ideal for Colab
+  1. Groq          — free API, fastest inference; 12K TPM limit (use Gemini if hitting 429s)
   2. OpenAI        — GPT-4o / GPT-4o-mini
   3. Anthropic     — Claude Opus / Haiku
-  4. Google Gemini — Gemini 1.5 Pro / 2.0 Flash (free tier available)
+  4. Google Gemini — Gemini 1.5 Pro / 2.0 Flash (1M TPM free — best free option for heavy use)
   5. Together AI   — hosted open-source models
   6. OpenRouter    — meta-router over 100+ models
   7. LM Studio     — local OpenAI-compatible server (port 1234)
@@ -20,6 +20,7 @@ Set *_API_KEY env vars to enable cloud providers.
 from __future__ import annotations
 import json
 import os
+import re
 import time
 from typing import Optional
 from loguru import logger
@@ -208,11 +209,28 @@ class LLMManager:
             try:
                 return self._dispatch(prompt, system_prompt, max_tokens, temperature, use_fast_model)
             except Exception as e:
-                logger.warning(f"LLM attempt {attempt+1}/{LLM_CONFIG.max_retries} failed: {e}")
+                err = str(e)
+                logger.warning(f"LLM attempt {attempt+1}/{LLM_CONFIG.max_retries} failed: {err}")
                 if attempt < LLM_CONFIG.max_retries - 1:
-                    time.sleep(LLM_CONFIG.retry_delay * (attempt + 1))
+                    wait = self._parse_retry_wait(err, attempt)
+                    logger.info(f"Waiting {wait:.1f}s before retry...")
+                    time.sleep(wait)
         logger.error("All LLM retries exhausted. Returning template response.")
         return self._template_response(prompt)
+
+    @staticmethod
+    def _parse_retry_wait(error_msg: str, attempt: int) -> float:
+        """Extract wait time from rate-limit error messages, with exponential fallback."""
+        # Groq/OpenAI 429: "Please try again in 3.26s" or "try again in 1m30s"
+        m = re.search(r'try again in\s+((?:\d+m)?\d+(?:\.\d+)?s)', error_msg, re.IGNORECASE)
+        if m:
+            raw = m.group(1)
+            minutes = float(re.search(r'(\d+)m', raw).group(1)) if 'm' in raw else 0.0
+            seconds = float(re.search(r'([\d.]+)s', raw).group(1)) if 's' in raw else 0.0
+            suggested = minutes * 60 + seconds
+            return suggested + 1.0  # 1s buffer
+        # Fallback: exponential backoff (5s, 15s, 45s)
+        return LLM_CONFIG.retry_delay * (3 ** attempt)
 
     def _dispatch(self, prompt, system_prompt, max_tokens, temperature, fast: bool) -> str:
         if self.backend in _OPENAI_COMPAT:
