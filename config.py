@@ -48,7 +48,7 @@ PROVIDER_MODELS: dict[str, dict[str, str]] = {
                     "fast":    os.getenv("OPENAI_FAST_MODEL",   "gpt-4o-mini")},
     "anthropic":   {"primary": os.getenv("ANTHROPIC_MODEL",    "claude-opus-4-8"),
                     "fast":    os.getenv("ANTHROPIC_FAST_MODEL","claude-haiku-4-5-20251001")},
-    "gemini":      {"primary": os.getenv("GEMINI_MODEL",       "gemini-1.5-pro-latest"),
+    "gemini":      {"primary": os.getenv("GEMINI_MODEL",       "gemini-1.5-flash"),
                     "fast":    os.getenv("GEMINI_FAST_MODEL",   "gemini-2.0-flash")},
     "together":    {"primary": os.getenv("TOGETHER_MODEL",     "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
                     "fast":    os.getenv("TOGETHER_FAST_MODEL", "meta-llama/Llama-3.1-8B-Instruct-Turbo")},

@@ -221,8 +221,9 @@ class LLMManager:
     @staticmethod
     def _parse_retry_wait(error_msg: str, attempt: int) -> float:
         """Extract wait time from rate-limit error messages, with exponential fallback."""
-        # Groq/OpenAI 429: "Please try again in 3.26s" or "try again in 1m30s"
-        m = re.search(r'try again in\s+((?:\d+m)?\d+(?:\.\d+)?s)', error_msg, re.IGNORECASE)
+        # Groq/OpenAI: "try again in 3.26s" or "try again in 1m30s"
+        # Gemini:      "Please retry in 32.57s"
+        m = re.search(r'(?:try again|retry) in\s+((?:\d+m)?\d+(?:\.\d+)?s)', error_msg, re.IGNORECASE)
         if m:
             raw = m.group(1)
             minutes = float(re.search(r'(\d+)m', raw).group(1)) if 'm' in raw else 0.0

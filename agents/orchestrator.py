@@ -157,7 +157,7 @@ class ForensicOrchestrator:
 
         # ── Phase 4: Financial Data Assembly ────────────────────────
         logger.info("Phase 4: Financial Data Assembly")
-        financial_data = self._assemble_financial_data(company_id, company_name, storage)
+        financial_data = self._assemble_financial_data(company_id, company_name, storage, ticker=profile.ticker)
         if not financial_data:
             logger.warning("No structured financial data. Agents will work from text only.")
 
@@ -650,7 +650,7 @@ class ForensicOrchestrator:
 
     # ─── Financial Data Assembly ────────────────────────────────
 
-    def _assemble_financial_data(self, company_id: int, company_name: str, storage: StorageManager) -> dict:
+    def _assemble_financial_data(self, company_id: int, company_name: str, storage: StorageManager, ticker: str = "") -> dict:
         db_records = self.db.get_financial_history(company_id, years=5)
         financial_data: dict = {}
 
@@ -675,19 +675,29 @@ class ForensicOrchestrator:
                     pass
 
         if not financial_data:
-            financial_data = self._fetch_yfinance_financials(company_name)
+            financial_data = self._fetch_yfinance_financials(company_name, ticker=ticker)
         return financial_data
 
-    def _fetch_yfinance_financials(self, company_name: str) -> dict:
+    def _fetch_yfinance_financials(self, company_name: str, ticker: str = "") -> dict:
         try:
             import yfinance as yf
             import pandas as pd
 
-            tickers_to_try = [
-                company_name.upper().replace(" ", ""),
-                company_name.upper().replace(" ", "") + ".NS",
-                company_name.upper().replace(" ", "") + ".BO",
+            name_base = company_name.upper().replace(" ", "")
+            tickers_to_try = []
+            # Try provided ticker first (with exchange suffixes for Indian stocks)
+            if ticker:
+                t = ticker.upper()
+                tickers_to_try += [t, t + ".NS", t + ".BO"]
+            # Then guess from company name
+            tickers_to_try += [
+                name_base,
+                name_base + ".NS",
+                name_base + ".BO",
             ]
+            # Deduplicate while preserving order
+            seen = set()
+            tickers_to_try = [x for x in tickers_to_try if not (x in seen or seen.add(x))]
             for ticker_str in tickers_to_try:
                 try:
                     t = yf.Ticker(ticker_str)
