@@ -416,7 +416,7 @@ OPENROUTER_API_KEY=sk-or-...  # Paid (100+ models)
 ```bash
 GROQ_MODEL=llama-3.3-70b-versatile      # default
 GROQ_FAST_MODEL=llama-3.1-8b-instant
-GEMINI_MODEL=gemini-1.5-pro-latest
+GEMINI_MODEL=gemini-1.5-flash        # default; use gemini-2.0-flash if you have paid quota
 GEMINI_FAST_MODEL=gemini-2.0-flash
 OLLAMA_MODEL=qwen2.5:7b
 ANTHROPIC_MODEL=claude-opus-4-8

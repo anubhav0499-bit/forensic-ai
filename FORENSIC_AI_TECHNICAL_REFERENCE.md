@@ -851,7 +851,7 @@ LLM_PROVIDER=groq             # Options: auto|groq|openai|anthropic|gemini|
 # ── Override model names per provider ──────────────────────────────
 GROQ_MODEL=llama-3.3-70b-versatile
 GROQ_FAST_MODEL=llama-3.1-8b-instant
-GEMINI_MODEL=gemini-1.5-pro-latest
+GEMINI_MODEL=gemini-1.5-flash        # default; use gemini-2.0-flash if you have paid quota
 GEMINI_FAST_MODEL=gemini-2.0-flash
 OLLAMA_MODEL=qwen2.5:7b
 ```
