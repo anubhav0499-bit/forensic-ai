@@ -102,15 +102,16 @@ class RiskScorer:
 
     @staticmethod
     def altman_to_score(z_score: float) -> float:
-        """Convert Altman Z-Score to 0-100 credit risk score (inverse)."""
+        """Convert Altman Z-Score to 0-100 credit risk score (inverse).
+        Uses EM non-manufacturing thresholds (Altman 2000): Safe>2.60, Grey 1.10-2.60, Distress<1.10."""
         if z_score > 4.0:
             return 10.0
-        elif z_score > 2.99:
-            return 20.0 + (2.99 - z_score) / (2.99 - 4.0) * (-10)
-        elif z_score > 1.81:
-            return 50.0 + (1.81 - z_score) / (1.81 - 2.99) * (-30)
-        elif z_score > 0:
-            return 75.0 + (0 - z_score) / (0 - 1.81) * (-25)
+        elif z_score > 2.60:   # Safe zone
+            return 20.0 + (2.60 - z_score) / (2.60 - 4.0) * (-10)
+        elif z_score > 1.10:   # Grey zone
+            return 50.0 + (1.10 - z_score) / (1.10 - 2.60) * (-30)
+        elif z_score > 0:      # Distress zone
+            return 75.0 + (0 - z_score) / (0 - 1.10) * (-25)
         else:
             return 95.0
 

@@ -2,12 +2,14 @@
 Agent 9 — Related Party Forensics Agent
 =========================================
 Detects: self-dealing, promoter loans, RPT revenue inflation, disclosure opacity,
-director remuneration misalignment, inter-company guarantees.
+director remuneration misalignment, inter-company guarantees, tunnelling patterns.
+Frameworks: SEBI RPT Regulations 2021 / OECD Corporate Governance Principles (2023) / ISA 550.
 """
 
 from __future__ import annotations
 import re
 from .base_agent import BaseForensicAgent, AgentResult
+from llm.prompts import build_rpt_prompt
 from utils.helpers import safe_divide
 
 
@@ -15,14 +17,17 @@ class RelatedPartyAgent(BaseForensicAgent):
     """
     Dedicated related-party transaction (RPT) forensics.
     Combines NLP pattern detection on disclosures + quantitative ratio checks.
+    Applies SEBI RPT Regulations 2021 materiality thresholds and OECD Principle VI.C tunnelling detection.
     """
 
-    # RPT revenue > this share of total revenue = concentration risk
-    RPT_REVENUE_THRESHOLD = 0.15      # 15%
-    # Loans to directors/promoters > this share of net worth
+    # RPT revenue > this share of total revenue = concentration risk (SEBI RPT 2021: >10% turnover = material)
+    RPT_REVENUE_THRESHOLD = 0.15      # 15% — elevated concern level
+    # Loans to directors/promoters > this share of net worth (SEBI RPT 2021 materiality: 10%)
     PROMOTER_LOAN_THRESHOLD = 0.10
     # Director remuneration > this % of net profit = governance concern
     DIR_REMU_THRESHOLD = 0.10
+    # Circular transaction / tunnelling risk threshold
+    CIRCULAR_TRANSACTION_THRESHOLD = 0.20  # RPT purchases + sales both >20% revenue = circular risk
 
     # Keywords indicating vague/opaque RPT disclosures
     _OPACITY_PHRASES = [
@@ -34,12 +39,21 @@ class RelatedPartyAgent(BaseForensicAgent):
     _GOOD_DISCLOSURE_PHRASES = [
         "independent valuation", "fairness opinion", "third party benchmarked",
         "audit committee reviewed", "market rate confirmed",
+        "special resolution", "minority shareholder approval",
     ]
     # Red-flag language in RPT disclosures
     _RED_FLAG_PHRASES = [
         "waived", "forgiven", "written off", "converted to equity",
         "interest-free", "unsecured loan", "no interest",
         "below market", "concessional", "subsidised",
+    ]
+    # Tunnelling / circular transaction signals (OECD Principle VI.C)
+    _TUNNELLING_PHRASES = [
+        "inter-company loan", "inter-company advance", "loan to subsidiary",
+        "purchase from promoter", "sale to promoter group",
+        "guarantee on behalf of", "corporate guarantee",
+        "investment in associate", "unsecured inter-corporate deposit",
+        "inter-corporate deposit", "icd",
     ]
 
     def investigate(
@@ -203,24 +217,83 @@ class RelatedPartyAgent(BaseForensicAgent):
             result.findings.append(f)
             scores.append(25)
 
-        # ── 5. LLM Synthesis ─────────────────────────────────────
-        quant_summary = (
-            f"{len(result.red_flags)} red flags from quantitative checks. "
-            + ("; ".join(f.title for f in result.red_flags[:5]) if result.red_flags else "No major RPT flags.")
-        )
-        years_data = {y: financial_data[y] for y in years[:3]}
-        prompt = (
-            f"RELATED PARTY FORENSICS — {company_name}\n\n"
-            f"Quantitative Pre-Analysis:\n{quant_summary}\n\n"
-            f"Financial Data:\n{str(years_data)[:1500]}\n\n"
-            f"Document Context:\n{context[:2000]}\n\n"
-            "Investigate:\n"
-            "1. Map all significant related party relationships (entities, nature, amounts).\n"
-            "2. Are RPT prices arm's length? Is there evidence of tunnelling or self-dealing?\n"
-            "3. Loans, guarantees, and pledges by/to insiders — terms and adequacy of disclosure.\n"
-            "4. Director remuneration vs performance — is pay aligned with shareholder returns?\n"
-            "5. Any circular transactions or revenue round-tripping via related entities?\n"
-            "Format: Evidence → Analysis → Conclusion. Flag CRITICAL / HIGH items explicitly."
+        # ── 5. Tunnelling / Circular Transaction Detection ────────
+        tunnelling_hits = sum(1 for p in self._TUNNELLING_PHRASES if p.lower() in context.lower())
+        if tunnelling_hits >= 3:
+            f = self._create_finding(
+                finding_type="RED_FLAG",
+                title=f"Tunnelling / Circular Transaction Signals Detected ({tunnelling_hits} indicators)",
+                detail=(
+                    f"Disclosure text contains {tunnelling_hits} signals associated with tunnelling patterns "
+                    "(OECD Principle VI.C): inter-corporate loans, guarantees for related entities, "
+                    "or inter-company deposits. These structures can transfer value from the listed entity "
+                    "to the promoter group at the expense of minority shareholders."
+                ),
+                evidence=(
+                    f"Tunnelling phrase matches: {tunnelling_hits}. "
+                    f"Matching terms: {', '.join(p for p in self._TUNNELLING_PHRASES if p.lower() in context.lower())[:300]}"
+                ),
+                fiscal_year=years[0] if years else "",
+                risk_level="CRITICAL" if tunnelling_hits >= 5 else "HIGH",
+                confidence=0.65,
+            )
+            result.red_flags.append(f)
+            result.findings.append(f)
+            scores.append(72 if tunnelling_hits >= 5 else 58)
+
+        # ── 6. SEBI RPT 2021 Materiality Check ───────────────────
+        # Check if any year had promoter loans above SEBI's 10% net worth materiality threshold
+        # that should have required shareholder special resolution
+        for yr in years[:2]:
+            d = financial_data[yr]
+            rpt_rev = d.get("related_party_revenue", 0) or 0
+            total_rev = d.get("revenue", 1) or 1
+            rpt_purchases = d.get("related_party_purchases", 0) or 0
+            # SEBI RPT 2021: if both RPT sales AND purchases are >10% of revenue → circular risk
+            if (rpt_rev / total_rev > 0.10) and (rpt_purchases / total_rev > 0.10):
+                f = self._create_finding(
+                    finding_type="RED_FLAG",
+                    title=f"Potential Circular RPT Transactions ({yr}): Both Sales and Purchases via Related Parties",
+                    detail=(
+                        f"FY{yr}: RPT revenue = {rpt_rev/total_rev*100:.1f}% of total revenue AND "
+                        f"RPT purchases = {rpt_purchases/total_rev*100:.1f}% of revenue. "
+                        "When both sales and purchases flow through related parties at similar scales, "
+                        "this is a classic indicator of revenue round-tripping / circular transactions "
+                        "(SEBI RPT Regulations 2021 — heightened scrutiny trigger)."
+                    ),
+                    evidence=(
+                        f"FY{yr}: RPT Revenue={rpt_rev/1e6:.1f}M ({rpt_rev/total_rev*100:.1f}% of rev), "
+                        f"RPT Purchases={rpt_purchases/1e6:.1f}M ({rpt_purchases/total_rev*100:.1f}% of rev)"
+                    ),
+                    fiscal_year=yr,
+                    risk_level="CRITICAL",
+                    confidence=0.75,
+                )
+                result.red_flags.append(f)
+                result.findings.append(f)
+                scores.append(78)
+
+        # ── 7. LLM Synthesis (SEBI RPT 2021 / OECD framework) ────
+        rpt_revenue_share = 0.0
+        if years and financial_data[years[0]].get("revenue", 0):
+            rpt_revenue_share = safe_divide(
+                financial_data[years[0]].get("related_party_revenue", 0) or 0,
+                financial_data[years[0]].get("revenue", 1) or 1,
+            )
+        promoter_loan_ratio_latest = 0.0
+        if years:
+            d0 = financial_data[years[0]]
+            pl = d0.get("loans_to_promoters", 0) or d0.get("loans_to_directors", 0) or 0
+            nw = d0.get("shareholder_equity", 1) or 1
+            promoter_loan_ratio_latest = safe_divide(pl, nw)
+
+        quant_flags = [f.title for f in result.red_flags[:6]]
+        prompt = build_rpt_prompt(
+            company=company_name,
+            rpt_revenue_share=rpt_revenue_share,
+            promoter_loan_ratio=promoter_loan_ratio_latest,
+            disclosure_context=context,
+            quantitative_flags=quant_flags,
         )
         result.raw_analysis = self._analyze_with_llm(prompt, "governance_specialist", max_tokens=2048)
 

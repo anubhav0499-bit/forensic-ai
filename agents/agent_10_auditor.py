@@ -2,12 +2,15 @@
 Agent 10 — Auditor Intelligence Agent
 ========================================
 Analyzes: auditor identity, tenure, key audit matters (KAMs),
-going concern opinions, internal control weaknesses, restatements.
+going concern opinions, internal control weaknesses, restatements,
+non-audit fee independence risk.
+Frameworks: ISA 240 §A50 / PCAOB AS 2101 / PCAOB Rule 3521 / ISA 570 / ISA 705.
 """
 
 from __future__ import annotations
 import re
 from utils.helpers import safe_divide
+from llm.prompts import build_auditor_risk_prompt
 from .base_agent import BaseForensicAgent, AgentResult
 
 
@@ -27,6 +30,11 @@ _RESTATEMENT_PHRASES = [
 _KAM_PHRASES = [
     "key audit matter", "critical audit matter", "significant risk",
     "emphasis of matter",
+]
+# Non-audit fee patterns (PCAOB Rule 3521 — >40% of total fees = independence risk)
+_NON_AUDIT_FEE_PHRASES = [
+    "non-audit", "non audit", "other services fee", "advisory fee",
+    "tax services fee", "consulting fee", "other fees",
 ]
 
 
@@ -106,6 +114,23 @@ class AuditorIntelligenceAgent(BaseForensicAgent):
         ])
         clean_opinion = "unqualified opinion" in text_lower or "in our opinion" in text_lower
 
+        # Non-audit fee ratio detection (PCAOB Rule 3521: >40% = independence risk)
+        non_audit_fee_ratio = None
+        non_audit_mentions = sum(1 for p in _NON_AUDIT_FEE_PHRASES if p in text_lower)
+        # Try to extract ratio from patterns like "non-audit fees: X% of audit fees"
+        fee_ratio_match = re.search(
+            r'non.audit[^.]{0,80}?(\d{1,3}(?:\.\d)?)\s*%',
+            text_lower
+        )
+        if fee_ratio_match:
+            try:
+                non_audit_fee_ratio = float(fee_ratio_match.group(1)) / 100
+            except ValueError:
+                pass
+        # If ratio not parseable but mentioned, flag qualitatively
+        if non_audit_fee_ratio is None and non_audit_mentions >= 2:
+            non_audit_fee_ratio = -1.0  # sentinel: mentioned but ratio unknown
+
         return {
             "auditor_name": auditor_name,
             "is_big_four": big_four_found is not None,
@@ -118,6 +143,7 @@ class AuditorIntelligenceAgent(BaseForensicAgent):
             "qualified_opinion": qualified_opinion,
             "clean_opinion": clean_opinion,
             "text_length": len(text),
+            "non_audit_fee_ratio": non_audit_fee_ratio,  # None=not found, -1=mentioned, 0-1=ratio
         }
 
     def _generate_findings(self, result: AgentResult, signals: dict, latest_year: str, company_name: str) -> None:
@@ -216,6 +242,33 @@ class AuditorIntelligenceAgent(BaseForensicAgent):
             result.red_flags.append(f); result.findings.append(f)
             score_contributors.append(55)
 
+        # ── Non-Audit Fee Independence Risk (PCAOB Rule 3521) ────
+        naf_ratio = signals.get("non_audit_fee_ratio")
+        if naf_ratio is not None:
+            if naf_ratio >= 0.40:
+                f = self._create_finding(
+                    "RED_FLAG",
+                    f"Non-Audit Fees {naf_ratio*100:.0f}% of Total Fees — Independence Risk (PCAOB Rule 3521)",
+                    "Non-audit fees exceeding 40% of total fees creates an economic dependency that impairs "
+                    "auditor independence. PCAOB Rule 3521 identifies this as a fee-based independence threat. "
+                    "Auditors receiving significant non-audit revenue have reduced incentive to challenge management.",
+                    f"Non-audit fee ratio: {naf_ratio*100:.0f}%. Threshold per PCAOB Rule 3521: >40% = independence risk.",
+                    fiscal_year=latest_year, risk_level="HIGH", confidence=0.78,
+                )
+                result.red_flags.append(f); result.findings.append(f)
+                score_contributors.append(65)
+            elif naf_ratio == -1.0:
+                f = self._create_finding(
+                    "RED_FLAG",
+                    "Non-Audit Services Mentioned — Independence Review Required",
+                    "Disclosures reference non-audit services but exact fee ratio is not clearly stated. "
+                    "PCAOB Rule 3521 requires scrutiny of non-audit fee ratios. Investigate the fee schedule.",
+                    "Non-audit fee mentions found in auditor disclosures; ratio not parseable from available text.",
+                    fiscal_year=latest_year, risk_level="MEDIUM", confidence=0.55,
+                )
+                result.red_flags.append(f); result.findings.append(f)
+                score_contributors.append(45)
+
         # ── Green flag: clean Big 4 opinion ─────────────────────
         if signals["is_big_four"] and signals["clean_opinion"] and not signals["going_concern_flag"] and not signals["material_weakness"]:
             f = self._create_finding(
@@ -253,26 +306,21 @@ class AuditorIntelligenceAgent(BaseForensicAgent):
                 result.red_flags.append(f); result.findings.append(f)
 
     def _build_prompt(self, company_name: str, signals: dict, context: str, latest_year: str) -> str:
-        prompt = (
-            f"Auditor intelligence investigation for {company_name} (FY{latest_year}).\n\n"
-            f"AUDIT SIGNALS DETECTED:\n"
-            f"  Auditor: {signals['auditor_name']} (Big 4: {signals['is_big_four']})\n"
-            f"  Going Concern: {signals['going_concern_flag']}\n"
-            f"  Material Weakness: {signals['material_weakness']}\n"
-            f"  Restatement: {signals['restatement_flag']}\n"
-            f"  Qualified Opinion: {signals['qualified_opinion']}\n"
-            f"  Emphasis of Matter: {signals['emphasis_of_matter']}\n"
-            f"  KAM Count (est.): {signals['kam_count']}\n"
-            f"  Auditor Tenure (est.): {signals['tenure_years']} years\n\n"
+        naf_ratio = signals.get("non_audit_fee_ratio")
+        return build_auditor_risk_prompt(
+            company=company_name,
+            auditor_name=signals["auditor_name"],
+            is_big_four=signals["is_big_four"],
+            going_concern=signals["going_concern_flag"],
+            material_weakness=signals["material_weakness"],
+            restatement=signals["restatement_flag"],
+            qualified_opinion=signals["qualified_opinion"],
+            emphasis_of_matter=signals["emphasis_of_matter"],
+            kam_count=signals["kam_count"],
+            tenure_years=signals["tenure_years"],
+            non_audit_fee_ratio=naf_ratio if (naf_ratio is not None and naf_ratio >= 0) else None,
+            audit_context=context,
         )
-        if context and len(context) > 100:
-            prompt += f"AUDITOR REPORT EXCERPTS:\n{context[:2500]}\n\n"
-        prompt += (
-            "Assess the quality of audit oversight, independence risks, and what the audit qualifications "
-            "signal about management integrity. Identify specific red flags. "
-            "Evidence → Analysis → Reasoning → Conclusion."
-        )
-        return prompt
 
     def _build_summary(self, company_name: str, signals: dict, result: AgentResult, latest_year: str) -> str:
         flags = []

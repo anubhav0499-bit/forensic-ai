@@ -189,9 +189,9 @@ class ForensicThresholds:
     beneish_manipulation_threshold: float = -1.78
     beneish_high_risk_threshold: float = -1.0
 
-    # Altman Z-Score (manufacturing)
-    altman_safe_zone: float = 2.99
-    altman_grey_zone: float = 1.81
+    # Altman Z-Score (EM non-manufacturing variant — Altman 2000)
+    altman_safe_zone: float = 2.60   # EM: >2.60 safe (manufacturing: 2.99)
+    altman_grey_zone: float = 1.10   # EM: <1.10 distress (manufacturing: 1.81)
 
     # Piotroski F-Score
     piotroski_strong: int = 7
@@ -261,13 +261,13 @@ def get_threshold(key: str, sector: str = "") -> float:
 # RISK SCORING WEIGHTS
 # ─────────────────────────────────────────────
 RISK_SCORE_WEIGHTS = {
-    "fraud_indicators": 0.25,
-    "earnings_quality": 0.20,
-    "cash_flow_quality": 0.20,
-    "governance": 0.15,
-    "credit_risk": 0.10,
-    "auditor_risk": 0.05,
-    "management_credibility": 0.05,
+    "fraud_indicators":      0.20,   # Beneish M-Score, Dechow F-Score, accruals
+    "earnings_quality":      0.20,   # Accrual ratios, cash conversion, NOA
+    "cash_flow_quality":     0.15,   # OCF/EBITDA, FCF, financing dependency
+    "governance":            0.15,   # Board, SEBI LODR, promoter, RPT (COSO)
+    "credit_risk":           0.10,   # Altman EM Z-Score, ICR, D/E
+    "auditor_risk":          0.10,   # ISA 240 §A50, PCAOB AS 2101, non-audit fees
+    "management_credibility": 0.10,  # ISA 240 §A4, guidance accuracy, NLP
 }
 
 RISK_BANDS = {

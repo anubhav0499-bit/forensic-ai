@@ -73,6 +73,9 @@ class BeneishResult:
     interpretation: str = ""
     component_flags: dict = field(default_factory=dict)
     formula_trace: dict = field(default_factory=dict)
+    # Count of Beneish indices above the Beneish (1999) paper manipulation thresholds.
+    # 3+ = elevated risk regardless of aggregate M-Score (Beneish 1999, Table 3).
+    flags_above_paper_threshold: int = 0
 
 
 class BeneishMScore:
@@ -96,16 +99,24 @@ class BeneishMScore:
         "lvgi": -0.327,
     }
 
-    # Individual component thresholds (from academic literature)
+    # Individual component thresholds.
+    # "critical" = exact manipulation-signal threshold from Beneish (1999) Table 3.
+    # "concern"  = early-warning level (half of paper threshold or academic norm).
     COMPONENT_THRESHOLDS = {
-        "dsri": {"concern": 1.031, "critical": 1.200, "label": "Days Sales Receivable Index"},
-        "gmi": {"concern": 1.014, "critical": 1.100, "label": "Gross Margin Index"},
-        "aqi": {"concern": 1.039, "critical": 1.200, "label": "Asset Quality Index"},
-        "sgi": {"concern": 1.134, "critical": 1.600, "label": "Sales Growth Index"},
-        "depi": {"concern": 1.001, "critical": 1.100, "label": "Depreciation Index"},
-        "sgai": {"concern": 1.054, "critical": 1.200, "label": "SG&A Index"},
-        "lvgi": {"concern": 1.111, "critical": 1.300, "label": "Leverage Index"},
-        "tata": {"concern": 0.031, "critical": 0.100, "label": "Total Accruals / Total Assets"},
+        "dsri": {"concern": 1.100, "critical": 1.465, "label": "Days Sales Receivable Index"},
+        "gmi":  {"concern": 1.050, "critical": 1.193, "label": "Gross Margin Index"},
+        "aqi":  {"concern": 1.050, "critical": 1.254, "label": "Asset Quality Index"},
+        "sgi":  {"concern": 1.200, "critical": 1.607, "label": "Sales Growth Index"},
+        "depi": {"concern": 1.020, "critical": 1.083, "label": "Depreciation Index"},
+        "sgai": {"concern": 1.020, "critical": 1.041, "label": "SG&A Index"},
+        "lvgi": {"concern": 1.050, "critical": 1.111, "label": "Leverage Index"},
+        "tata": {"concern": 0.015, "critical": 0.031, "label": "Total Accruals / Total Assets"},
+    }
+
+    # Paper manipulation-signal thresholds (Beneish 1999, Table 3) used for counting.
+    _PAPER_THRESHOLDS = {
+        "dsri": 1.465, "gmi": 1.193, "aqi": 1.254, "sgi": 1.607,
+        "depi": 1.083, "sgai": 1.041, "lvgi": 1.111, "tata": 0.031,
     }
 
     def calculate(self, inp: BeneishInputs) -> BeneishResult:
@@ -210,6 +221,16 @@ class BeneishMScore:
                 f"No strong statistical evidence of earnings manipulation from this model alone."
             )
 
+        # ── Count indices above Beneish (1999) paper thresholds ───
+        indices = {
+            "dsri": result.dsri, "gmi": result.gmi, "aqi": result.aqi,
+            "sgi": result.sgi, "depi": result.depi, "sgai": result.sgai,
+            "lvgi": result.lvgi, "tata": result.tata,
+        }
+        result.flags_above_paper_threshold = sum(
+            1 for k, v in indices.items() if v > self._PAPER_THRESHOLDS.get(k, 9999)
+        )
+
         # ── Flag concerning individual components ─────────────────
         result.component_flags = self._flag_components(result)
         result.formula_trace = {
@@ -248,10 +269,10 @@ class BeneishMScore:
         return flags
 
     def interpret_dsri(self, dsri: float) -> str:
-        if dsri > 1.2:
-            return f"DSRI={dsri:.3f}: Receivables growing 20%+ faster than sales. HIGH RISK of revenue inflation or channel stuffing."
-        elif dsri > 1.031:
-            return f"DSRI={dsri:.3f}: Receivables growing faster than sales. Monitor for collection quality deterioration."
+        if dsri > 1.465:
+            return f"DSRI={dsri:.3f}: ABOVE Beneish paper manipulation threshold (1.465). Receivables growing disproportionately faster than sales — HIGH RISK of revenue inflation or channel stuffing."
+        elif dsri > 1.100:
+            return f"DSRI={dsri:.3f}: Receivables growing noticeably faster than sales. Approaching manipulation threshold. Monitor for collection quality deterioration."
         else:
             return f"DSRI={dsri:.3f}: Receivables growing in line with or slower than sales. Normal."
 
