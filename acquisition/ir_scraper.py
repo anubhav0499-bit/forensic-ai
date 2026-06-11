@@ -16,7 +16,7 @@ import requests
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from config import settings
+from config import ACQUISITION_CONFIG
 
 
 @dataclass
@@ -71,7 +71,7 @@ class IRScraper:
             "User-Agent": "Mozilla/5.0 (compatible; ForensicAI/1.0; research)",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         })
-        self._rate_limit = settings.acquisition.rate_limit
+        self._rate_limit = ACQUISITION_CONFIG.rate_limit
 
     # ─── Public API ────────────────────────────────────────────────────────
 
