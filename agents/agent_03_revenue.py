@@ -6,8 +6,15 @@ AR/revenue divergence, Q4 skew, fictitious revenue signals.
 """
 
 from __future__ import annotations
+import re
 from .base_agent import BaseForensicAgent, AgentResult
 from utils.helpers import safe_divide
+
+
+def _extract_year_int(key: str) -> int:
+    """Extract a 4-digit calendar year from any fiscal-year key format."""
+    m = re.search(r'20\d{2}', key)
+    return int(m.group()) if m else 0
 
 
 class RevenueForensicsAgent(BaseForensicAgent):
@@ -125,7 +132,8 @@ class RevenueForensicsAgent(BaseForensicAgent):
         if len(years) >= 3:
             latest_y = years[0]
             oldest_y = years[min(2, len(years) - 1)]
-            n_years  = int(latest_y) - int(oldest_y) if latest_y.isdigit() and oldest_y.isdigit() else 2
+            _ly, _oy = _extract_year_int(latest_y), _extract_year_int(oldest_y)
+            n_years  = (_ly - _oy) if (_ly and _oy and _ly > _oy) else 2
 
             rev_l = financial_data[latest_y].get("revenue", 0) or 0
             rev_o = financial_data[oldest_y].get("revenue", 0) or 0

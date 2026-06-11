@@ -181,6 +181,7 @@ class AuditTrail:
         return [e for e in self.entries if e.agent_id == agent_id]
 
     def export_summary(self) -> dict:
+        """Lightweight session summary. Full entry data lives in investigation_log.jsonl."""
         return {
             "company": self.company_name,
             "session_start": self._session_start,
@@ -188,6 +189,6 @@ class AuditTrail:
             "total_entries": len(self.entries),
             "red_flags": len(self.get_red_flags()),
             "green_flags": len(self.get_green_flags()),
-            "agents_run": list({e.agent_id for e in self.entries}),
-            "entries": [asdict(e) for e in self.entries],
+            "agents_run": sorted({e.agent_id for e in self.entries}),
+            "audit_log": str(self.log_file),
         }

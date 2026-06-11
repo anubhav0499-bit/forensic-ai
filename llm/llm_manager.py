@@ -281,7 +281,11 @@ class LLMManager:
             ),
         )
         resp = model.generate_content(prompt)
-        return resp.text
+        try:
+            return resp.text
+        except (AttributeError, ValueError) as e:
+            logger.warning(f"Gemini response has no text (safety filter or empty): {e}")
+            return self._template_response(prompt)
 
     def _generate_ollama(self, prompt, system_prompt, max_tokens, temperature, fast: bool) -> str:
         import httpx
@@ -342,6 +346,7 @@ class LLMManager:
         except Exception as e:
             logger.error(f"HF model load failed: {e}")
             self._hf_model = None
+            self.backend = "template"
 
     def _template_response(self, prompt: str) -> str:
         return (
@@ -388,6 +393,8 @@ class LLMManager:
         return self.extract_json(prompt)
 
     def is_available(self) -> bool:
+        if self.backend == "hf":
+            return self._hf_model is not None
         return self.backend != "template"
 
     def get_backend_info(self) -> dict:

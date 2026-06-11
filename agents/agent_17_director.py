@@ -6,6 +6,7 @@ This is the investment committee chairperson.
 """
 
 from __future__ import annotations
+import re
 from .base_agent import BaseForensicAgent, AgentResult, AgentFinding
 from forensics.risk_scorer import RiskScorer, RiskComponents
 from utils.helpers import classify_risk
@@ -59,7 +60,7 @@ class ChiefInvestigationDirector(BaseForensicAgent):
         fraud_agent = all_agent_results.get(6)
         earnings_agent = all_agent_results.get(8)
         cashflow_agent = all_agent_results.get(4)
-        governance_agent = all_agent_results.get(None)   # Placeholder
+        governance_agent = all_agent_results.get(9)
         credit_agent = all_agent_results.get(7)
         auditor_agent = all_agent_results.get(10)
         mgmt_agent = all_agent_results.get(11)
@@ -68,7 +69,7 @@ class ChiefInvestigationDirector(BaseForensicAgent):
             fraud_indicators=getattr(fraud_agent, "risk_score", 50.0) if fraud_agent else 50.0,
             earnings_quality=getattr(earnings_agent, "risk_score", 50.0) if earnings_agent else 50.0,
             cash_flow_quality=getattr(cashflow_agent, "risk_score", 50.0) if cashflow_agent else 50.0,
-            governance=self._estimate_governance_score(all_red_flags),
+            governance=governance_agent.risk_score if governance_agent else self._estimate_governance_score(all_red_flags),
             credit_risk=getattr(credit_agent, "risk_score", 50.0) if credit_agent else 50.0,
             auditor_risk=getattr(auditor_agent, "risk_score", 50.0) if auditor_agent else 50.0,
             management_credibility=getattr(mgmt_agent, "risk_score", 50.0) if mgmt_agent else 50.0,
@@ -81,13 +82,21 @@ class ChiefInvestigationDirector(BaseForensicAgent):
             risk_result.overall_score, all_red_flags, all_green_flags
         )
 
-        # ── Devil's Advocate Resolution ────────────────────────
-        devils_agent = all_agent_results.get(16)
-        short_seller = all_agent_results.get(14)
-        bull_case = all_agent_results.get(15)
+        # ── Investment Committee Perspectives ──────────────────
+        # Agents 14/15/16 were merged into a single result[14].
+        # Extract each perspective section from the combined raw_analysis.
+        perspectives_result = all_agent_results.get(14)
+        perspectives_text = getattr(perspectives_result, "raw_analysis", "") if perspectives_result else ""
 
-        bear_case_summary = getattr(short_seller, "raw_analysis", "Not available")[:500] if short_seller else "Not available"
-        bull_case_summary = getattr(bull_case, "raw_analysis", "Not available")[:500] if bull_case else "Not available"
+        def _extract_perspective(text: str, header: str) -> str:
+            m = re.search(
+                rf"=== {re.escape(header)} ===\n(.*?)(?====|$)", text, re.DOTALL
+            )
+            return m.group(1).strip()[:600] if m else "Not available"
+
+        bear_case_summary = _extract_perspective(perspectives_text, "BEAR CASE (Short Seller)")
+        bull_case_summary = _extract_perspective(perspectives_text, "BULL CASE")
+        devil_summary     = _extract_perspective(perspectives_text, "DEVIL'S ADVOCATE")
 
         # ── Final LLM Synthesis ────────────────────────────────
         synthesis_prompt = self._build_synthesis_prompt(
@@ -101,6 +110,7 @@ class ChiefInvestigationDirector(BaseForensicAgent):
             verdict=verdict,
             bear_case=bear_case_summary,
             bull_case=bull_case_summary,
+            devil_advocate=devil_summary,
             financial_data=financial_data,
         )
         final_analysis = self._analyze_with_llm(synthesis_prompt, "investment_director", max_tokens=4096)
@@ -251,7 +261,7 @@ class ChiefInvestigationDirector(BaseForensicAgent):
     def _build_synthesis_prompt(self, company_name: str, overall_score: float, risk_band: str,
                                  component_scores: dict, critical_flags: list, high_flags: list,
                                  green_flags: list, verdict: str, bear_case: str, bull_case: str,
-                                 financial_data: dict) -> str:
+                                 financial_data: dict, devil_advocate: str = "") -> str:
         critical_str = "\n".join([f"• {f.title}: {f.evidence[:100]}" for f in critical_flags[:5]])
         high_str = "\n".join([f"• {f.title}" for f in high_flags[:5]])
         green_str = "\n".join([f"• {f.title}" for f in green_flags[:5]])
@@ -280,6 +290,9 @@ BEAR CASE (Short Seller Analysis):
 
 BULL CASE:
 {bull_case}
+
+DEVIL'S ADVOCATE:
+{devil_advocate if devil_advocate else "Not available"}
 
 As the Chief Investment Officer, provide:
 1. EXECUTIVE SUMMARY (500 words): Investment thesis in plain English

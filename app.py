@@ -79,9 +79,23 @@ def main():
         st.markdown("### ⚙️ Configuration")
 
         with st.expander("🤖 LLM Backend", expanded=True):
-            backend = st.selectbox("LLM Provider", ["Ollama (Local)", "HuggingFace", "Template (No LLM)"])
-            ollama_model = st.text_input("Ollama Model", value="qwen2.5:7b")
-            st.info("Install Ollama: https://ollama.com\nThen: `ollama pull qwen2.5:7b`")
+            try:
+                from llm.llm_manager import LLMManager
+                _llm = LLMManager()
+                info = _llm.get_backend_info()
+                if _llm.is_available():
+                    st.success(f"**Active**: {info['backend'].upper()}")
+                    st.write(f"Primary: `{info['primary_model']}`")
+                    st.write(f"Fast:    `{info['fast_model']}`")
+                else:
+                    st.warning("No LLM detected — running in template mode.")
+            except Exception:
+                st.warning("LLM backend not yet initialized.")
+            st.info(
+                "To change provider, set `LLM_PROVIDER` in your `.env` file.\n"
+                "Options: auto | groq | openai | anthropic | gemini | "
+                "together | openrouter | lmstudio | ollama | hf"
+            )
 
         with st.expander("📋 Investigation Settings"):
             years_history = st.slider("Years of History", 2, 10, 5)
@@ -393,8 +407,6 @@ def _system_info_tab() -> None:
     with col2:
         st.markdown("### 📦 Package Status")
         packages = [
-            ("langchain", "LangChain"),
-            ("langgraph", "LangGraph"),
             ("chromadb", "ChromaDB"),
             ("sentence_transformers", "SentenceTransformers"),
             ("fitz", "PyMuPDF"),

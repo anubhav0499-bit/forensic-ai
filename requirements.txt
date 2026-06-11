@@ -9,12 +9,6 @@ uvicorn>=0.27.0
 pydantic>=2.5.0
 python-dotenv>=1.0.0
 
-# Agent Framework
-langgraph>=0.1.0
-langchain>=0.2.0
-langchain-community>=0.2.0
-langchain-core>=0.2.0
-
 # LLM Backends — Cloud Providers (lightweight, install only what you use)
 openai>=1.35.0              # OpenAI + Groq + LM Studio + OpenRouter (all OpenAI-compatible)
 anthropic>=0.31.0           # Anthropic Claude

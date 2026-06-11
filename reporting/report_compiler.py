@@ -190,12 +190,12 @@ class ReportCompiler:
             return "STRONG AVOID"
         elif "AVOID" in summary:
             return "AVOID"
+        elif "CAUTIOUS BUY" in summary:
+            return "CAUTIOUS BUY"
         elif "CAUTION" in summary:
             return "CAUTION"
         elif "MONITOR" in summary:
             return "MONITOR"
-        elif "CAUTIOUS BUY" in summary:
-            return "CAUTIOUS BUY"
         elif "BUY" in summary:
             return "BUY"
         return "MONITOR"

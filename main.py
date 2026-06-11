@@ -245,8 +245,6 @@ Examples:
 
         # Check individual packages
         packages = [
-            ("langchain", "LangChain"),
-            ("langgraph", "LangGraph"),
             ("chromadb", "ChromaDB"),
             ("sentence_transformers", "SentenceTransformers"),
             ("fitz", "PyMuPDF"),

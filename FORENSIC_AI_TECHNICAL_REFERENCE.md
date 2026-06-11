@@ -4,16 +4,25 @@
 ---
 
 **Classification:** Internal — Restricted  
-**Version:** 1.1  
-**Platform:** Forensic AI v1.1  
+**Version:** 1.2  
+**Platform:** Forensic AI v1.2  
 **Maintained by:** Platform Owner  
 **Last Updated:** June 2026
+
+**v1.2 Changes (current):**
+- 10 bug fixes: `company_id` threading through all agents; CAUTIOUS BUY verdict ordering; CV issue field names; governance agent lookup; `EmbeddingConfig.device` GPU default; CAGR fiscal-year key parsing; Gemini safety-filter crash; risk-score keyword false negatives; HF backend availability flag; `_extract_perspective()` regex for merged agent 14
+- Refactoring: `_run_agents_parallel` and `_run_generic_agents_parallel` unified into a single `_run_parallel(items, run_fn, max_workers)` dispatcher
+- `AuditTrail.export_summary()` now writes a lightweight stats summary with a pointer to `investigation_log.jsonl` instead of duplicating all entries
+- Removed LangGraph / LangChain from runtime dependencies (were listed but never used)
+- `.gitignore` added; `app.py` LLM selector replaced with auto-detected backend display
+- PPTX and HTML report generators disabled by default (re-enable by uncommenting in `report_compiler.py`)
 
 **v1.1 Changes:**
 - 9-provider LLM support (Groq, OpenAI, Anthropic, Gemini, Together, OpenRouter, LM Studio, Ollama, HF)
 - Agent 3 (Revenue Forensics) — promoted to dedicated class with quantitative checks
 - Agent 9 (Related Party) — promoted to dedicated class with RPT forensics
 - Phase B now runs 8 agents in parallel (was 6)
+- Agents 14/15/16 (Short Seller / Bull Case / Devil's Advocate) merged into a single `_run_perspectives()` call returning one `AgentResult(agent_id=14)`
 - Google Colab notebook (`colab_setup.ipynb`) for cloud-based execution
 - Industry-specific threshold overrides framework
 - `requirements-minimal.txt` for quick-start installs
@@ -30,7 +39,7 @@
 6. [Risk Scoring Framework](#6-risk-scoring-framework)
 7. [Cross-Validation Engine](#7-cross-validation-engine)
 8. [Data Sources & Acquisition](#8-data-sources--acquisition)
-9. [Output Formats — 6 Report Types](#9-output-formats)
+9. [Output Formats — 4 Active Report Types](#9-output-formats)
 10. [Configuration Reference](#10-configuration-reference)
 11. [Operational Guide — Running Investigations](#11-operational-guide)
 12. [Control Points & Override Procedures](#12-control-points--override-procedures)
@@ -54,7 +63,7 @@ When a user submits a company name (e.g., "Infosys", "AAPL", "Reliance"):
 ```
 User Input → Company ID → Document Acquisition → Knowledge Base → 
 17 Agents (Parallel) → Cross-Validation → Director Synthesis → 
-6 Report Formats → Risk Score (0–100) + Investment Verdict
+4 Report Formats (PDF/DOCX/XLSX/JSON) → Risk Score (0–100) + Investment Verdict
 ```
 
 The platform automatically:
@@ -65,7 +74,7 @@ The platform automatically:
 - Runs 17 specialist AI agents in parallel, each investigating a specific domain
 - Cross-validates financial statements for internal consistency across 10 rules
 - Synthesizes all findings into a single investigation verdict
-- Generates 6 report formats: PDF, DOCX, XLSX, PPTX, HTML Dashboard, JSON
+- Generates 4 report formats by default: PDF, DOCX, XLSX, JSON (PPTX and HTML available, disabled by default)
 
 ### Key Principles
 
@@ -150,7 +159,7 @@ The platform automatically:
 | **Analytics DB** | DuckDB | Trend analysis, peer benchmarking |
 | **PDF Parsing** | PyMuPDF → pdfplumber → Tesseract | Cascade OCR fallback |
 | **Table Extraction** | Camelot → Tabula | Financial table parsing |
-| **Orchestration** | LangGraph + ThreadPoolExecutor | Parallel agent execution |
+| **Orchestration** | ThreadPoolExecutor | Parallel agent execution (cloud backends); sequential fallback for local |
 | **UI** | Streamlit | Web interface |
 | **CLI** | Python argparse | Command-line interface |
 
@@ -248,31 +257,33 @@ The platform deploys 17 specialist agents organized into 4 execution phases. Eac
 
 ---
 
-### Phase B — Specialist Agents (Parallel, 6 threads)
+### Phase B — Specialist Agents (Parallel, 8 agents)
 
 | # | Agent | Class | Primary Role | Engines Used |
 |---|-------|-------|-------------|-------------|
+| **3** | **Revenue Forensics** | `RevenueForensicsAgent` | AR/Revenue gap, Q4 skew, deferred revenue pull-forward, CAGR divergence | Quantitative + RAG |
 | **4** | **Cash Flow Forensics** | `CashFlowForensicsAgent` | FCF quality, CFO-vs-NI divergence, CapEx sustainability | AccrualAnalyzer |
 | **5** | **Working Capital** | `WorkingCapitalAgent` | DSO/DIO/DPO/CCC with multi-year trend | WorkingCapitalAnalyzer |
 | **7** | **Credit Risk** | `CreditRiskAgent` | Leverage, coverage, liquidity, implied credit rating | AltmanZScore |
 | **8** | **Earnings Quality** | `EarningsQualityAgent` | Accruals, tax rate anomalies, margin consistency | AccrualAnalyzer |
+| **9** | **Related Party** | `RelatedPartyAgent` | Self-dealing, RPT concentration, promoter loans, disclosure quality | Quantitative + RAG |
 | **10** | **Auditor Intelligence** | `AuditorIntelligenceAgent` | Going concern, material weakness, restatements, KAMs | RAG + NLP |
 | **11** | **Management NLP** | `ManagementNLPAgent` | Evasion, uncertainty, non-GAAP overemphasis in disclosures | Word-list NLP + RAG |
 
 ---
 
-### Phase C — Synthesis / LLM Agents (Parallel, 6 threads, with inter-agent context)
+### Phase C — Synthesis Agents (with inter-agent context)
 
 These agents receive the complete output of Phase A and Phase B agents before forming their own views. This prevents echo-chamber conclusions.
 
 | # | Agent | LLM Role | Primary Question |
 |---|-------|---------|-----------------|
-| **3** | **Revenue Forensics** | Forensic Accountant | Channel stuffing, premature recognition, deferred revenue |
-| **9** | **Related Party** | Governance Specialist | Self-dealing, related party loans, disclosure quality |
 | **12** | **Peer Comparison** | Equity Analyst | How do metrics compare to industry peers? Are any outliers suspicious? |
-| **14** | **Short Seller** | Short Seller | Build the strongest institutional bear case |
-| **15** | **Bull Case** | Bull Analyst | Build the strongest institutional bull case |
-| **16** | **Devil's Advocate** | Contrarian | Challenge all prior conclusions. Find counter-evidence to every red flag |
+| **14** | **Investment Committee Perspectives** | Bear / Bull / Devil's Advocate | Three perspectives combined in one `AgentResult`: `_run_perspectives()` makes three sequential LLM calls and concatenates them under `=== BEAR CASE ===`, `=== BULL CASE ===`, `=== DEVIL'S ADVOCATE ===` headers. Agent 17 extracts each section via regex. |
+
+> **Note on agents 3, 9:** These were Phase C LLM-only agents in v1.0. They were promoted to dedicated quantitative classes in v1.1 and now run in Phase B alongside the other specialist agents.
+>
+> **Note on agents 15, 16:** These were standalone agents in v1.0. They were merged into agent 14 in v1.1 to eliminate boilerplate. The Director still receives all three perspectives via `all_agent_results[14].raw_analysis`.
 
 ---
 
@@ -729,19 +740,13 @@ Priority 4: Live yfinance API (last resort)
 
 ## 9. OUTPUT FORMATS
 
-### 9.1 PDF Report
-- **Generator:** ReportLab
-- **Sections:** Cover page, Executive Summary, Forensic Scores, Red Flags (sorted by severity), Green Flags, Financial Data Table (5-year), Agent Summaries, Final Verdict
-- **Length:** 20–60 pages depending on findings
-- **Use case:** Formal presentation to investment committee
+Four formats are generated by default. PPTX and HTML are implemented but disabled — uncomment their blocks in `reporting/report_compiler.py` to re-enable.
 
-### 9.2 DOCX Report (Word)
-- **Generator:** python-docx
-- **Sections:** 25 sections covering full investigation
-- **Target length:** 15,000–40,000 words
-- **Use case:** Detailed due diligence documentation; legal record
+### 9.1 JSON Output *(always generated first)*
+- **Format:** Structured JSON with all investigation data
+- **Use case:** API integration; programmatic processing; archival; basis for all other formats
 
-### 9.3 XLSX Report (Excel)
+### 9.2 XLSX Report (Excel)
 - **Generator:** openpyxl
 - **Tabs:**
 
@@ -759,20 +764,30 @@ Priority 4: Live yfinance API (last resort)
 
 - **Use case:** Analyst workbook; further calculations
 
-### 9.4 PPTX Report (PowerPoint)
+### 9.3 DOCX Report (Word)
+- **Generator:** python-docx
+- **Sections:** 25 sections covering full investigation
+- **Target length:** 15,000–40,000 words
+- **Use case:** Detailed due diligence documentation; legal record
+
+### 9.4 PDF Report
+- **Generator:** ReportLab
+- **Sections:** Cover page, Executive Summary, Forensic Scores, Red Flags (sorted by severity), Green Flags, Financial Data Table (5-year), Agent Summaries, Final Verdict
+- **Length:** 20–60 pages depending on findings
+- **Use case:** Formal presentation to investment committee
+
+### 9.5 PPTX Report (PowerPoint) — *disabled by default*
 - **Generator:** python-pptx
 - **Slides:** 7 (Title, Executive Summary, Risk Scorecard, Forensic Scores, Top Red Flags, Financial Highlights, Final Verdict)
+- **Enable:** Uncomment the PPTX block in `reporting/report_compiler.py`
 - **Use case:** Investment committee presentation
 
-### 9.5 HTML Dashboard
+### 9.6 HTML Dashboard — *disabled by default*
 - **Generator:** Custom HTML/CSS
 - **Type:** Self-contained single-file (no external dependencies)
 - **Contents:** Risk score banner, forensic scores, agent scores, red/green flag cards with severity badges, financial table, management questionnaire (top 20)
+- **Enable:** Uncomment the HTML block in `reporting/report_compiler.py`
 - **Use case:** Quick review; sharing via email
-
-### 9.6 JSON Output
-- **Format:** Structured JSON with all investigation data
-- **Use case:** API integration; programmatic processing; archival
 
 ---
 
@@ -1061,19 +1076,31 @@ INDUSTRY_THRESHOLD_OVERRIDES = {
 
 ### Control Point 4: Agent Disable / Enable
 
-To disable a specific agent (e.g., skip Short Seller for a conservative mandate):
+To disable a specific Phase B agent (e.g., skip Related Party for a credit-only mandate):
+
+```python
+# In orchestrator.py, _run_all_agents(), edit phase_b_specs:
+phase_b_specs = [
+    (3,  "Revenue Forensics Agent",    RevenueForensicsAgent),
+    (4,  "Cash Flow Forensics Agent",  CashFlowForensicsAgent),
+    (5,  "Working Capital Agent",      WorkingCapitalAgent),
+    (7,  "Credit Risk Agent",          CreditRiskAgent),
+    (8,  "Earnings Quality Agent",     EarningsQualityAgent),
+    # (9, "Related Party Agent", RelatedPartyAgent),  ← disabled
+    (10, "Auditor Intelligence Agent", AuditorIntelligenceAgent),
+    (11, "Management NLP Agent",       ManagementNLPAgent),
+]
+```
+
+To disable the Investment Committee Perspectives (bear/bull/devil):
 
 ```python
 # In orchestrator.py, _run_all_agents():
-# Comment out or remove from phase_c_configs:
-phase_c_configs = [
-    (3, "revenue", "Revenue Forensics Agent"),
-    (9, "related_party", "Related Party Agent"),
-    # (14, "short_seller", "Short Seller Agent"),  ← disabled
-    (15, "bull_case", "Bull Case Agent"),
-    (16, "devils_advocate", "Devil's Advocate Agent"),
-]
+# Comment out the perspectives block (lines starting with "results[14] = ...")
+# results[14] = self._run_perspectives(...)
 ```
+
+Phase C currently runs only Agent 12 (Peer Comparison) via `phase_c_configs`. To add a new LLM-only agent to Phase C, add an entry to `phase_c_configs` and extend `role_map` / `question_map` in `_run_generic_agent()`.
 
 ### Control Point 5: LLM Model Override
 
@@ -1119,9 +1146,11 @@ class AcquisitionConfig:
 
 Every finding, calculation, and agent action is logged to an **immutable JSONL file**. This creates a complete, tamper-evident evidence chain.
 
-**File location:** `{company}/Audit_Trail/audit_trail_{session_id}.jsonl`
+**File location:** `{company}/Audit_Trail/investigation_log.jsonl`
 
-**Each entry is a JSON line:**
+At session close, `audit_summary.json` is written alongside it. This is a **lightweight stats file** (entry counts, agent list, timing, path to the JSONL) — it does not duplicate the full entry list, which lives only in the JSONL.
+
+**Each JSONL entry:**
 ```json
 {
   "timestamp": "2026-06-09T14:23:45.123456",
@@ -1348,7 +1377,7 @@ The Director also sets 8 quarterly triggers. Investigation should be re-run if a
 
 ---
 
-*End of Forensic AI Technical Reference Manual v1.0*
+*End of Forensic AI Technical Reference Manual v1.2*
 
 *This document is classified as Internal — Restricted. Distribution is limited to authorized analysts and reviewers. This platform produces research-grade output to assist human analysts; all findings must be reviewed by qualified professionals before being acted upon. This is not financial advice.*
 
@@ -1357,7 +1386,7 @@ The Director also sets 8 quarterly triggers. Investigation should be re-run if a
 
 | Field | Value |
 |-------|-------|
-| Version | 1.0 |
+| Version | 1.2 |
 | Status | Active |
 | Review Cycle | Quarterly |
 | Owner | Platform Administrator |

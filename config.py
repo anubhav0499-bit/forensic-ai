@@ -98,7 +98,7 @@ LLM_CONFIG = LLMConfig()
 class EmbeddingConfig:
     model_name: str = "BAAI/bge-large-en-v1.5"
     fallback_model: str = "all-MiniLM-L6-v2"
-    device: str = "cuda" if os.getenv("USE_GPU", "auto") == "auto" else "cpu"
+    device: str = "cuda" if os.getenv("USE_GPU", "").lower() in ("cuda", "1", "true", "yes") else "cpu"
     batch_size: int = 32
     normalize_embeddings: bool = True
     chunk_size: int = 512

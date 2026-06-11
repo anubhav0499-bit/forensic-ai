@@ -65,6 +65,7 @@ class BaseForensicAgent(ABC):
         db: SQLiteHandler,
         audit: AuditTrail,
         storage: StorageManager,
+        company_id: int = 0,
     ):
         self.agent_id = agent_id
         self.agent_name = AGENT_NAMES.get(agent_id, f"Agent {agent_id}")
@@ -73,6 +74,7 @@ class BaseForensicAgent(ABC):
         self.db = db
         self.audit = audit
         self.storage = storage
+        self.company_id = company_id
 
     @abstractmethod
     def investigate(
@@ -148,7 +150,7 @@ class BaseForensicAgent(ABC):
 
         # Persist to database
         self.db.save_finding(
-            company_id=0,  # Will be set by orchestrator
+            company_id=self.company_id,
             finding={
                 "agent_id": self.agent_id,
                 "agent_name": self.agent_name,

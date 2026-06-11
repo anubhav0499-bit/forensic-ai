@@ -8,7 +8,6 @@ Phase D: Agent 17 (Director) — iterative synthesis with refinement loop
 """
 
 from __future__ import annotations
-import asyncio
 import concurrent.futures
 import time
 import json
@@ -181,7 +180,7 @@ class ForensicOrchestrator:
 
         # ── Phase 6: Director Synthesis + Refinement ────────────────
         logger.info("Phase 6: Chief Investigation Director Synthesis")
-        director = ChiefInvestigationDirector(17, self.llm, retriever, self.db, audit, storage)
+        director = ChiefInvestigationDirector(17, self.llm, retriever, self.db, audit, storage, company_id=company_id)
         director_result = director.investigate(
             company_name=company_name, company_id=company_id,
             financial_data=financial_data, all_agent_results=agent_results,
@@ -256,7 +255,7 @@ class ForensicOrchestrator:
         # ── Phase A: Agent 6 (Fraud) — must run first ─────────────
         logger.info("  Phase A: Agent 6 (Fraud Detection)")
         try:
-            fraud_agent = FraudDetectionAgent(6, self.llm, retriever, self.db, audit, storage)
+            fraud_agent = FraudDetectionAgent(6, self.llm, retriever, self.db, audit, storage, company_id=company_id)
             results[6] = fraud_agent.investigate(company_name, company_id, financial_data,
                                                   cv_context=cv_context)
             logger.info(f"  ✓ Agent 6 (Fraud Detection): Risk={results[6].risk_score:.1f}")
@@ -338,22 +337,36 @@ class ForensicOrchestrator:
             "groq", "openai", "anthropic", "gemini", "together", "openrouter"
         )
 
+    # ── Shared parallel dispatcher ────────────────────────────────
+
+    def _run_parallel(self, items: list, run_fn, max_workers: int = 8) -> dict[int, AgentResult]:
+        """
+        Cloud → ThreadPoolExecutor; local → sequential loop.
+        Each element of `items` is unpacked as positional args to run_fn,
+        which must return (agent_id, AgentResult).
+        """
+        results: dict[int, AgentResult] = {}
+        if self._supports_parallel_requests():
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(max_workers, len(items))) as executor:
+                futures = {executor.submit(run_fn, *item): item[0] for item in items}
+                for future in concurrent.futures.as_completed(futures):
+                    aid, r = future.result()
+                    results[aid] = r
+        else:
+            for item in items:
+                aid, r = run_fn(*item)
+                results[aid] = r
+        return results
+
     # ── Specialized agent runner ──────────────────────────────────
 
     def _run_agents_parallel(
         self, specs: list, company_name, company_id, financial_data,
         retriever, storage, audit, cv_context: str = "",
     ) -> dict[int, AgentResult]:
-        """
-        Run specialized agents.
-        Cloud backends → ThreadPoolExecutor (true concurrency).
-        Local backends  → sequential loop (no benefit to threading).
-        """
-        results: dict[int, AgentResult] = {}
-
         def run_one(agent_id, agent_name, agent_cls):
             try:
-                agent = agent_cls(agent_id, self.llm, retriever, self.db, audit, storage)
+                agent = agent_cls(agent_id, self.llm, retriever, self.db, audit, storage, company_id=company_id)
                 return agent_id, agent.investigate(
                     company_name, company_id, financial_data, cv_context=cv_context
                 )
@@ -361,22 +374,7 @@ class ForensicOrchestrator:
                 logger.error(f"Agent {agent_id} ({agent_name}) failed: {e}")
                 return agent_id, AgentResult(agent_id, agent_name, status="FAILED", error=str(e))
 
-        if self._supports_parallel_requests():
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(specs))) as executor:
-                futures = {
-                    executor.submit(run_one, aid, name, cls): aid
-                    for aid, name, cls in specs
-                }
-                for future in concurrent.futures.as_completed(futures):
-                    aid, r = future.result()
-                    results[aid] = r
-        else:
-            # Local inference — sequential to avoid queueing overhead
-            for aid, name, cls in specs:
-                aid, r = run_one(aid, name, cls)
-                results[aid] = r
-
-        return results
+        return self._run_parallel(specs, run_one, max_workers=8)
 
     # ── Generic (LLM-only) agent runner ──────────────────────────
 
@@ -384,11 +382,6 @@ class ForensicOrchestrator:
         self, configs: list, company_name, company_id, financial_data,
         retriever, storage, audit, inter_context: str, cv_context: str,
     ) -> dict[int, AgentResult]:
-        """
-        Same cloud-vs-local branching as _run_agents_parallel.
-        """
-        results: dict[int, AgentResult] = {}
-
         def run_one(agent_id, agent_type, agent_name):
             try:
                 r = self._run_generic_agent(
@@ -403,21 +396,7 @@ class ForensicOrchestrator:
                 logger.error(f"Generic agent {agent_id} ({agent_name}) failed: {e}")
                 return agent_id, AgentResult(agent_id, agent_name, status="FAILED", error=str(e))
 
-        if self._supports_parallel_requests():
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(6, len(configs))) as executor:
-                futures = {
-                    executor.submit(run_one, aid, atype, aname): aid
-                    for aid, atype, aname in configs
-                }
-                for future in concurrent.futures.as_completed(futures):
-                    aid, r = future.result()
-                    results[aid] = r
-        else:
-            for aid, atype, aname in configs:
-                aid, r = run_one(aid, atype, aname)
-                results[aid] = r
-
-        return results
+        return self._run_parallel(configs, run_one, max_workers=6)
 
     def _run_generic_agent(
         self, agent_id, agent_name, agent_type, company_name, company_id,
@@ -806,9 +785,10 @@ class ForensicOrchestrator:
         score += text_lower.count("red flag") * 3
         score += text_lower.count("concern") * 2
         score += text_lower.count("manipulation") * 6
-        score -= text_lower.count("strong") * 2
-        score -= text_lower.count("healthy") * 2
-        score -= text_lower.count("positive") * 1
+        score -= text_lower.count("healthy") * 3
+        score -= text_lower.count("low risk") * 3
+        score -= text_lower.count("well managed") * 2
+        score -= text_lower.count("clean audit") * 3
         return max(10.0, min(95.0, score))
 
     def _parse_llm_findings(self, text: str, agent_id: int, agent_name: str, audit: AuditTrail):
@@ -845,7 +825,13 @@ class ForensicOrchestrator:
             director_result=director_result,
             profile=profile.__dict__ if hasattr(profile, "__dict__") else {},
             extra_data={"cross_validation_issues": [
-                {"type": i.issue_type, "severity": i.severity, "evidence": i.evidence}
+                {
+                    "issue_type": i.issue_type,
+                    "description": i.description,
+                    "fiscal_year": i.fiscal_year,
+                    "severity": i.severity,
+                    "evidence": i.evidence,
+                }
                 for i in cv_issues
             ]},
         )
