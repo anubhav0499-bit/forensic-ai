@@ -25,14 +25,14 @@ class SQLiteHandler:
     def _initialize(self) -> None:
         with self._conn() as conn:
             conn.executescript(SCHEMA_SQL)
-            conn.execute("PRAGMA journal_mode=WAL")
-            conn.execute("PRAGMA foreign_keys=ON")
         logger.info(f"SQLite initialized: {self.db_path}")
 
     @contextmanager
     def _conn(self):
         conn = sqlite3.connect(self.db_path, check_same_thread=False)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
         try:
             yield conn
             conn.commit()

@@ -162,17 +162,17 @@ class EarningsQualityAgent(BaseForensicAgent):
                 )
                 result.red_flags.append(f); result.findings.append(f)
                 score_contributors.append(65)
-            elif etr is not None and etr < 0.08:
-                f = self._create_finding(
-                    "RED_FLAG",
-                    f"Suspiciously Low Effective Tax Rate: {etr*100:.1f}%",
-                    "ETR far below statutory rate. Suggests aggressive tax avoidance, offshore structures, "
-                    "or deferred tax asset recognition.",
-                    f"ETR = {etr*100:.1f}% vs. statutory ~25%",
-                    fiscal_year=latest_year, risk_level="MODERATE", confidence=0.75,
-                )
-                result.red_flags.append(f); result.findings.append(f)
-                score_contributors.append(55)
+        if etr is not None and etr < 0.08:
+            f = self._create_finding(
+                "RED_FLAG",
+                f"Suspiciously Low Effective Tax Rate: {etr*100:.1f}%",
+                "ETR far below statutory rate. Suggests aggressive tax avoidance, offshore structures, "
+                "or deferred tax asset recognition.",
+                f"ETR = {etr*100:.1f}% vs. statutory ~25%",
+                fiscal_year=latest_year, risk_level="MODERATE", confidence=0.75,
+            )
+            result.red_flags.append(f); result.findings.append(f)
+            score_contributors.append(55)
 
         # ── Gross margin volatility ───────────────────────────────
         gm_change = eq.get("gross_margin_change", 0) or 0

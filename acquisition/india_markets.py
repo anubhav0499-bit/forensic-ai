@@ -49,7 +49,7 @@ class IndiaMarketsClient:
             },
             follow_redirects=True,
         )
-        self._rate_delay = 1.0 / ACQUISITION_CONFIG.rate_limit
+        self._rate_delay = 1.0 / ACQUISITION_CONFIG.rate_limit if ACQUISITION_CONFIG.rate_limit else 1.0
         self._init_session()
 
     def _init_session(self):

@@ -156,7 +156,7 @@ class HTMLGenerator:
         rows = [
             ("Beneish M-Score", f"{m:.3f}" if isinstance(m, float) else "N/A", score_color(m, -1.78)),
             ("Altman Z-Score", f"{z:.3f}" if isinstance(z, float) else "N/A", score_color(z, 2.99, inverse=True)),
-            ("Piotroski F-Score", f"{p}/9" if isinstance(p, int) else "N/A", "#1B5E20" if isinstance(p, int) and p >= 7 else "#B71C1C"),
+            ("Piotroski F-Score", f"{p}/9" if isinstance(p, int) else "N/A", "#1B5E20" if isinstance(p, int) and p >= 7 else ("#E65100" if isinstance(p, int) and p >= 3 else "#B71C1C")),
             ("Dechow F-Score", f"{d:.4f}" if isinstance(d, float) else "N/A", score_color(d, 0.025)),
         ]
         return "".join([

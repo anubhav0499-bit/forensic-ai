@@ -126,6 +126,7 @@ class WorkingCapitalAgent(BaseForensicAgent):
                         f"Multi-Year DSO Deterioration: +{total_dso_rise:.0f} days over {len(dso_trend)} years",
                         "Sustained receivable build-up over multiple years is a systemic revenue quality issue.",
                         f"DSO trend: {', '.join([f'{y}:{v:.0f}d' for y, v in dso_trend])}",
+                        fiscal_year=dso_trend[-1][0],
                         risk_level="HIGH", confidence=0.88,
                     )
                     result.red_flags.append(f); result.findings.append(f)

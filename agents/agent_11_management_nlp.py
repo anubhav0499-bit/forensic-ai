@@ -55,13 +55,9 @@ class ManagementNLPAgent(BaseForensicAgent):
         result = AgentResult(agent_id=self.agent_id, agent_name=self.agent_name)
 
         # Retrieve management communications from RAG
-        mda_context = self.retriever.search(company_name, "management discussion analysis forward guidance outlook", n_results=5)
-        concall_context = self.retriever.search(company_name, "earnings call transcript analyst questions management answers", n_results=5)
-        governance_context = self.retriever.search(company_name, "chairman letter shareholder communication", n_results=3)
-
-        mda_text = " ".join([r["content"] for r in mda_context])
-        concall_text = " ".join([r["content"] for r in concall_context])
-        governance_text = " ".join([r["content"] for r in governance_context])
+        mda_text = self._retrieve_context(company_name, "management discussion analysis forward guidance outlook")
+        concall_text = self._retrieve_context(company_name, "earnings call transcript analyst questions management answers")
+        governance_text = self._retrieve_context(company_name, "chairman letter shareholder communication")
 
         findings = []
 
@@ -162,7 +158,13 @@ class ManagementNLPAgent(BaseForensicAgent):
             "red_flag_phrases": str(mda_metrics.get("evasive_phrases", [])[:5]),
         }
 
-        result.risk_score = min(100.0, evasion_score * 100 + non_gaap_count * 5)
+        result.risk_score = max(10.0, min(95.0, evasion_score * 100 + non_gaap_count * 5))
+
+        if self.db and company_id:
+            try:
+                self.db.save_concall(company_id, concall_record)
+            except Exception:
+                pass
         result.findings = findings
 
         result.summary = (

@@ -25,10 +25,10 @@ from config import REPORT_CONFIG
 class DOCXGenerator:
     """Generates a comprehensive 15,000-40,000 word DOCX forensic report."""
 
-    PRIMARY_COLOR = RGBColor(0x1A, 0x23, 0x7E)  # Deep blue
-    ACCENT_RED = RGBColor(0xB7, 0x1C, 0x1C)
-    ACCENT_GREEN = RGBColor(0x1B, 0x5E, 0x20)
-    ACCENT_ORANGE = RGBColor(0xE6, 0x51, 0x00)
+    PRIMARY_COLOR = RGBColor(0x1A, 0x23, 0x7E) if HAS_DOCX else None
+    ACCENT_RED = RGBColor(0xB7, 0x1C, 0x1C) if HAS_DOCX else None
+    ACCENT_GREEN = RGBColor(0x1B, 0x5E, 0x20) if HAS_DOCX else None
+    ACCENT_ORANGE = RGBColor(0xE6, 0x51, 0x00) if HAS_DOCX else None
 
     def generate(self, report_data: dict, output_path: Path) -> Path:
         if not HAS_DOCX:

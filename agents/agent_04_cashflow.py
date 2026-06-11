@@ -181,6 +181,7 @@ class CashFlowForensicsAgent(BaseForensicAgent):
                         "Multi-year trend: reported profits growing but cash from operations shrinking. Classic manipulation pattern.",
                         f"CFO trend: {', '.join([f'{y}:{v/1e6:.0f}M' for y, v in cfo_trend])}. "
                         f"NI trend: {', '.join([f'{y}:{v/1e6:.0f}M' for y, v in ni_trend])}",
+                        fiscal_year=sorted(cf_by_year.keys())[-1],
                         risk_level="CRITICAL", confidence=0.88,
                     )
                     result.red_flags.append(f); result.findings.append(f)

@@ -120,7 +120,7 @@ class DocumentChunker:
             )
             chunks.append(chunk)
 
-            i += step - overlap
+            i += max(1, step - overlap)
             chunk_idx += 1
 
         return chunks

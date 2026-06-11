@@ -53,6 +53,8 @@ class BeneishInputs:
     sga_tm1: float = 0.0
     total_debt_tm1: float = 0.0
     current_liabilities_tm1: float = 0.0
+    working_capital_tm1: float = 0.0
+    cash_tm1: float = 0.0
 
 
 @dataclass
@@ -159,9 +161,9 @@ class BeneishMScore:
         # ── 8. TATA: Total Accruals to Total Assets ───────────────
         # (ΔWC - ΔCash - ΔCurrent LTD - ΔTax Payable - Depreciation) / TA
         # Positive TATA → accruals-based earnings not supported by cash
-        working_capital_change = inp.working_capital_t - (inp.current_assets_tm1 - inp.current_liabilities_tm1)
+        working_capital_change = inp.working_capital_t - inp.working_capital_tm1
         result.tata = safe_divide(
-            working_capital_change - inp.cash_t - inp.depreciation_t,
+            working_capital_change - (inp.cash_t - inp.cash_tm1) - inp.taxes_payable_t - inp.depreciation_t,
             inp.total_assets_t,
         )
 

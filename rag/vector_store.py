@@ -132,7 +132,7 @@ class VectorStore:
                     "content": doc,
                     "metadata": results["metadatas"][0][i],
                     "distance": results["distances"][0][i],
-                    "similarity": 1 - results["distances"][0][i],
+                    "similarity": 1 / (1 + results["distances"][0][i]) if results["distances"][0][i] >= 0 else 1 - results["distances"][0][i],
                 })
             return hits
         except Exception as e:

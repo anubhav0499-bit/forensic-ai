@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import (
-    Font, PatternFill, Alignment, Border, Side, numbers
+    Font, PatternFill, Alignment, Border, Side
 )
 from openpyxl.chart import BarChart, LineChart, Reference
 from openpyxl.utils import get_column_letter

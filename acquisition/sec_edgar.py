@@ -113,6 +113,8 @@ class SECEdgarClient:
             if form in ("10-K", "10-K/A", "20-F"):
                 if len(filings) >= years:
                     break
+                if i >= len(accessions) or i >= len(primary_docs) or i >= len(dates):
+                    continue
                 accession = accessions[i].replace("-", "")
                 primary = primary_docs[i]
                 filing_url = f"https://www.sec.gov/Archives/edgar/data/{cik.lstrip('0')}/{accession}/"
@@ -155,6 +157,8 @@ class SECEdgarClient:
             if form in ("10-Q", "10-Q/A"):
                 if len(filings) >= quarters:
                     break
+                if i >= len(accessions) or i >= len(primary_docs) or i >= len(dates):
+                    continue
                 accession = accessions[i].replace("-", "")
                 primary = primary_docs[i]
                 filing_url = f"https://www.sec.gov/Archives/edgar/data/{cik.lstrip('0')}/{accession}/"

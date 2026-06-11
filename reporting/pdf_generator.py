@@ -142,7 +142,7 @@ class PDFGenerator:
         elements.append(Paragraph(company.upper(), styles["CustomTitle"]))
         elements.append(Spacer(1, 0.5 * inch))
         elements.append(Paragraph(
-            f'<font color="{color.hexval() if hasattr(color, "hexval") else "red"}" size="18"><b>RISK SCORE: {score:.1f}/100</b></font>',
+            f'<font color="{color._hexval if hasattr(color, "_hexval") else "#B71C1C"}" size="18"><b>RISK SCORE: {score:.1f}/100</b></font>',
             styles["Normal"]
         ))
         elements.append(Paragraph(

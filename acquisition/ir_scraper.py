@@ -71,7 +71,7 @@ class IRScraper:
             "User-Agent": "Mozilla/5.0 (compatible; ForensicAI/1.0; research)",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         })
-        self._rate_limit = ACQUISITION_CONFIG.rate_limit
+        self._rate_delay = 1.0 / ACQUISITION_CONFIG.rate_limit if ACQUISITION_CONFIG.rate_limit else 1.0
 
     # ─── Public API ────────────────────────────────────────────────────────
 
@@ -85,7 +85,7 @@ class IRScraper:
                 if resp.status_code == 200 and len(resp.text) > 1000:
                     logger.info(f"IR page found: {candidate}")
                     return resp.url
-                time.sleep(self._rate_limit)
+                time.sleep(self._rate_delay)
             except Exception:
                 continue
         return None
@@ -148,7 +148,7 @@ class IRScraper:
             return dest_path
 
         try:
-            time.sleep(self._rate_limit)
+            time.sleep(self._rate_delay)
             resp = self.session.get(doc.url, timeout=60, stream=True)
             resp.raise_for_status()
 

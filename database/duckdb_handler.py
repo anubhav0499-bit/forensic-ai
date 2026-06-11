@@ -61,7 +61,7 @@ class DuckDBHandler:
                 [company_name],
             )
             # Melt to long format
-            id_cols = ["company_name", "ticker", "fiscal_year"]
+            id_cols = [c for c in ["company_name", "fiscal_year"] if c in df.columns]
             value_cols = [c for c in df.columns if c not in id_cols and pd.api.types.is_numeric_dtype(df[c])]
             melted = df.melt(id_vars=id_cols, value_vars=value_cols, var_name="metric", value_name="value")
             melted["unit"] = "absolute"

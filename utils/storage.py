@@ -9,7 +9,7 @@ import json
 import pickle
 from pathlib import Path
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 from loguru import logger
 
 from config import OUTPUT_DIR, IS_COLAB

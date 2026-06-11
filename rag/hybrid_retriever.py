@@ -126,7 +126,7 @@ class HybridRetriever:
                 f"FY{meta.get('fiscal_year', '?')}, "
                 f"Section: {meta.get('section', 'Unknown')}]\n{content}"
             )
-            total_words += len(words)
+            total_words += len(content.split())
 
             if total_words >= max_tokens:
                 break

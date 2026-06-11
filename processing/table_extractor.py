@@ -11,6 +11,7 @@ from typing import Optional
 from loguru import logger
 
 from utils.helpers import safe_divide, detect_currency_unit
+from config import PROCESSING_CONFIG
 
 
 class TableExtractor:
@@ -118,7 +119,7 @@ class TableExtractor:
                 str(pdf_path),
                 flavor="lattice",
                 pages="all",
-                line_scale=PROCESSING_CONFIG.lattice_line_scale if hasattr(self, '_config') else 15,
+                line_scale=PROCESSING_CONFIG.lattice_line_scale,
             )
             for t in camelot_tables:
                 if t.accuracy > 70:

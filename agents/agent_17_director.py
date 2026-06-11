@@ -337,7 +337,7 @@ FINDINGS:
 
 TOP RED FLAGS:
 {'─'*40}
-{''.join([f'  ❌ [{f.risk_level}] {f.title[:60]}{chr(10)}' for f in sorted(red_flags, key=lambda x: x.risk_level)[:5]])}
+{''.join([f'  ❌ [{f.risk_level}] {f.title[:60]}{chr(10)}' for f in sorted(red_flags, key=lambda x: {"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3}.get(x.risk_level, 4))[:5]])}
 TOP GREEN FLAGS:
 {'─'*40}
 {''.join([f'  ✅ {f.title[:60]}{chr(10)}' for f in green_flags[:3]])}

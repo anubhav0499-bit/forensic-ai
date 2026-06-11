@@ -4,12 +4,36 @@
 ---
 
 **Classification:** Internal — Restricted  
-**Version:** 1.2  
-**Platform:** Forensic AI v1.2  
+**Version:** 1.3  
+**Platform:** Forensic AI v1.3  
 **Maintained by:** Platform Owner  
 **Last Updated:** June 2026
 
-**v1.2 Changes (current):**
+**v1.3 Changes (current) — Full codebase audit, 23 bugs fixed across 17 files:**
+- `acquisition/india_markets.py` — ZeroDivisionError guard on `rate_limit == 0`
+- `acquisition/ir_scraper.py` — fixed rate-limit sleep: was sleeping `rate_limit` seconds (a frequency value) instead of `1/rate_limit`; also fixed after prior `settings` → `ACQUISITION_CONFIG` fix
+- `acquisition/sec_edgar.py` — IndexError guard when `dates`/`accessions`/`primary_docs` arrays are shorter than `forms`; applied to both annual and quarterly filing loops
+- `processing/table_extractor.py` — `NameError: PROCESSING_CONFIG is not defined`; added missing `from config import PROCESSING_CONFIG` import
+- `processing/chunker.py` — infinite loop when `chunk_overlap >= chunk_size`; clamped advance to `max(1, step - overlap)`
+- `database/sqlite_handler.py` — `PRAGMA foreign_keys=ON` was only set on the init connection; moved both PRAGMAs into `_conn()` so every connection enforces them
+- `database/duckdb_handler.py` — `KeyError`/`ValueError` in `melt()`: `ticker` column does not exist in `financial_data` table; removed from `id_cols`
+- `forensics/beneish_score.py` — TATA formula: (a) added `working_capital_tm1` and `cash_tm1` fields to `BeneishInputs`; (b) fixed working capital change to use symmetric `WC_t - WC_tm1`; (c) fixed cash term to use delta `(cash_t - cash_tm1)` not absolute level; (d) added `taxes_payable_t` to the formula
+- `utils/storage.py` — `NameError: Optional is not defined`; crashes on import; added `Optional` to `from typing import Any, Optional`
+- `rag/vector_store.py` — `1 - distance` similarity only correct for cosine metric; now uses `1/(1+d)` for non-negative distances (L2), cosine fallback preserved
+- `rag/hybrid_retriever.py` — word count accumulated pre-truncation length causing loop to exit early after first truncated chunk; now counts words of `content` after truncation
+- `agents/agent_04_cashflow.py` — multi-year CFO divergence finding missing `fiscal_year` argument; finding was stored with empty fiscal year in DB
+- `agents/agent_05_working_capital.py` — multi-year DSO deterioration finding missing `fiscal_year` argument
+- `agents/agent_08_earnings_quality.py` — low-ETR check (`etr < 0.08`) was inside `if etr_change is not None` guard; never fired when no prior-year ETR exists; moved to separate `if` block
+- `agents/agent_11_management_nlp.py` — (a) `self.retriever.search()` called with non-existent method; replaced with `self._retrieve_context()`; (b) `concall_record` dict built but never persisted to DB; added `self.db.save_concall()` call; (c) `risk_score` had upper cap but no lower cap (returned 0.0 for clean companies); added `max(10.0, ...)` consistent with all other agents
+- `agents/agent_17_director.py` — red flags sorted alphabetically by string (`"LOW"` sorts after `"HIGH"`); replaced with severity-priority dict sort
+- `reporting/xlsx_generator.py` — `from openpyxl.styles import ... numbers` raises `ImportError`; `numbers` does not exist in `openpyxl.styles`; removed
+- `reporting/docx_generator.py` — class-level `RGBColor(...)` attributes evaluated at import time when `HAS_DOCX=False`; raised `NameError`; guarded with `if HAS_DOCX else None`
+- `reporting/pdf_generator.py` — `color.hexval()` method does not exist on ReportLab `HexColor`; `hasattr` always returned False, cover-page risk color always hardcoded red; fixed to use `color._hexval`
+- `reporting/html_generator.py` — Piotroski scores 3–6 (neutral) shown in same red as scores <3 (failing); added three-tier coloring: green ≥7, orange 3–6, red <3
+- `llm/llm_manager.py` — 429 retry logic now parses wait time from error message (e.g. "try again in 3.26s") instead of fixed 2s/4s backoff that was shorter than Groq's rate-limit reset window
+- `acquisition/ir_scraper.py` — `from config import settings` (settings undefined); fixed to `from config import ACQUISITION_CONFIG` (previous session)
+
+**v1.2 Changes:**
 - 10 bug fixes: `company_id` threading through all agents; CAUTIOUS BUY verdict ordering; CV issue field names; governance agent lookup; `EmbeddingConfig.device` GPU default; CAGR fiscal-year key parsing; Gemini safety-filter crash; risk-score keyword false negatives; HF backend availability flag; `_extract_perspective()` regex for merged agent 14
 - Refactoring: `_run_agents_parallel` and `_run_generic_agents_parallel` unified into a single `_run_parallel(items, run_fn, max_workers)` dispatcher
 - `AuditTrail.export_summary()` now writes a lightweight stats summary with a pointer to `investigation_log.jsonl` instead of duplicating all entries
