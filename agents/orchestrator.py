@@ -594,7 +594,7 @@ class ForensicOrchestrator:
         for issue in issues:
             audit.log_red_flag(
                 agent_id=0, agent_name="CrossValidator",
-                title=f"[CV] {issue.issue_type}",
+                flag_title=f"[CV] {issue.issue_type}",
                 evidence=issue.evidence,
                 severity=issue.severity,
             )
