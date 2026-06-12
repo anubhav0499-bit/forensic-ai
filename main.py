@@ -18,6 +18,14 @@ from datetime import datetime
 # Add package root to path (works in Colab/Kaggle/local)
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Ensure UTF-8 output on Windows (box-drawing chars, block elements, check marks in output)
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except AttributeError:
+        pass  # Python < 3.7 or non-TextIOWrapper stdout
+
 
 def _print_banner() -> None:
     banner = """

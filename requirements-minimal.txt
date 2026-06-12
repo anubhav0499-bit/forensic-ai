@@ -46,3 +46,5 @@ plotly>=5.22.0
 # Utilities
 tqdm>=4.66.0
 tenacity>=8.3.0
+fuzzywuzzy>=0.18.0          # used by utils/helpers.py for company name matching
+python-Levenshtein>=0.25.0  # accelerates fuzzywuzzy
