@@ -95,16 +95,35 @@ def build_analysis_prompt(
     extracted_text: str = "",
     question: str = "",
     additional_context: str = "",
+    structured_output: bool = True,
 ) -> str:
-    """Build a structured analysis prompt for forensic investigation."""
-    years_str = ", ".join(fiscal_years) if fiscal_years else "Available"
+    """
+    Build a structured forensic analysis prompt.
 
-    prompt = f"""
-INVESTIGATION BRIEF
+    When structured_output=True (default), the prompt requests JSON output
+    in the OutputHarness schema. The OutputHarness will then parse it cleanly.
+    When False, requests numbered free-text output (used by some report sections).
+    """
+    years_str = ", ".join(str(y) for y in fiscal_years) if fiscal_years else "Available"
+
+    output_instructions = (
+        "Return ONLY valid JSON matching the schema below — no markdown fences, no prose outside JSON."
+        if structured_output
+        else (
+            "REQUIRED OUTPUT FORMAT:\n"
+            "1. KEY FINDINGS (numbered list with evidence)\n"
+            "2. RISK INDICATORS (classify each: CRITICAL/HIGH/MEDIUM/LOW)\n"
+            "3. EVIDENCE CITATIONS (specific numbers, years, source documents)\n"
+            "4. CONCLUSION\n"
+            "5. RECOMMENDED FOLLOW-UP QUESTIONS"
+        )
+    )
+
+    prompt = f"""INVESTIGATION BRIEF
 ===================
 Company: {company_name}
-Fiscal Years Under Investigation: {years_str}
-Role: {agent_role}
+Fiscal Years: {years_str}
+Analyst Role: {agent_role}
 
 FINANCIAL DATA:
 {_format_financial_data(financial_data)}
@@ -116,14 +135,9 @@ FINANCIAL DATA:
 INVESTIGATION TASK:
 {question}
 
-REQUIRED OUTPUT FORMAT:
-1. KEY FINDINGS (numbered list with evidence)
-2. RISK INDICATORS (classify each: CRITICAL/HIGH/MEDIUM/LOW)
-3. EVIDENCE CITATIONS (specific numbers, years, source documents)
-4. CONCLUSION
-5. RECOMMENDED FOLLOW-UP QUESTIONS
+{output_instructions}
 
-Remember: Every finding must be supported by specific financial data.
+REMINDER: Every finding must be supported by specific numerical data from the financial statements or source documents above.
 """
     return prompt.strip()
 

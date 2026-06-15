@@ -11,11 +11,13 @@ from loguru import logger
 
 from llm.llm_manager import LLMManager
 from llm.prompts import SYSTEM_PROMPTS
+from llm.context_builder import ContextBuilder
+from llm.output_harness import OutputHarness, HarnessResult
 from rag.hybrid_retriever import HybridRetriever
 from database.sqlite_handler import SQLiteHandler
 from utils.audit_trail import AuditTrail
 from utils.storage import StorageManager
-from config import AGENT_NAMES
+from config import AGENT_NAMES, AGENT_CONTEXT_QUERIES, CONTEXT_CONFIG, HARNESS_CONFIG
 
 
 @dataclass
@@ -75,6 +77,8 @@ class BaseForensicAgent(ABC):
         self.audit = audit
         self.storage = storage
         self.company_id = company_id
+        self._ctx = ContextBuilder(retriever)
+        self._harness = OutputHarness()
 
     @abstractmethod
     def investigate(
@@ -88,9 +92,23 @@ class BaseForensicAgent(ABC):
         pass
 
     # ── Helper Methods ─────────────────────────────────────
+
     def _retrieve_context(self, company_name: str, query: str, max_tokens: int = 2500) -> str:
-        """Get relevant document context from RAG."""
-        return self.retriever.get_context_for_agent(company_name, query, max_tokens)
+        """
+        Multi-query RAG context retrieval.
+
+        If this agent has a dedicated query set in AGENT_CONTEXT_QUERIES,
+        that set is merged with the caller-supplied query for richer coverage.
+        Falls back to single-query retrieval for agents without a query set.
+        """
+        agent_queries = AGENT_CONTEXT_QUERIES.get(self.agent_id, [])
+        all_queries = ([query] + agent_queries) if agent_queries else [query]
+        return self._ctx.build(
+            company_name=company_name,
+            queries=all_queries,
+            budget_tokens=max_tokens,
+            n_per_query=CONTEXT_CONFIG.n_results_per_query,
+        )
 
     def _analyze_with_llm(
         self,
@@ -98,9 +116,46 @@ class BaseForensicAgent(ABC):
         system_role: str = "forensic_accountant",
         max_tokens: int = 2048,
     ) -> str:
-        """Run LLM analysis with appropriate system prompt."""
+        """
+        Run LLM analysis with appropriate system prompt.
+
+        Appends a structured JSON output instruction (if harness config is on)
+        and validates the response. Returns the raw text regardless of
+        validation so callers can still use it for narrative output, but logs
+        a warning when quality is low.
+        """
         system_prompt = SYSTEM_PROMPTS.get(system_role, SYSTEM_PROMPTS["forensic_accountant"])
-        return self.llm.generate(prompt, system_prompt, max_tokens=max_tokens)
+        if HARNESS_CONFIG.request_structured_output:
+            prompt = prompt + self._harness.structured_output_suffix()
+        raw = self.llm.generate(prompt, system_prompt, max_tokens=max_tokens)
+        result = self._harness.extract(raw, company_name="")
+        if not result.is_valid:
+            self.log_warning(f"LLM output failed quality check (role={system_role})")
+        elif result.quality_score < 0.5:
+            self.log_warning(
+                f"Low-quality LLM output: score={result.quality_score:.2f} (role={system_role})"
+            )
+        return raw
+
+    def _analyze_and_extract(
+        self,
+        prompt: str,
+        system_role: str = "forensic_accountant",
+        max_tokens: int = 2048,
+        company_name: str = "",
+    ) -> HarnessResult:
+        """
+        Run LLM analysis and return a fully parsed HarnessResult.
+
+        Use this instead of _analyze_with_llm() when you want structured
+        findings (ParsedFinding list) and a numeric risk score extracted
+        automatically from the LLM output.
+        """
+        system_prompt = SYSTEM_PROMPTS.get(system_role, SYSTEM_PROMPTS["forensic_accountant"])
+        if HARNESS_CONFIG.request_structured_output:
+            prompt = prompt + self._harness.structured_output_suffix()
+        raw = self.llm.generate(prompt, system_prompt, max_tokens=max_tokens)
+        return self._harness.extract(raw, company_name=company_name)
 
     def _create_finding(
         self,

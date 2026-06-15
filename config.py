@@ -439,6 +439,116 @@ SUPPORTED_DOCUMENT_TYPES = {
 # ─────────────────────────────────────────────
 # PEER INDUSTRY MAPPING
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# CONTEXT BUILDER CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class ContextConfig:
+    # Per-query result count fed into deduplication
+    n_results_per_query: int = 6
+    # Jaccard overlap threshold for near-duplicate suppression (0-1)
+    dedup_threshold: float = 0.65
+    # Approximate chars per LLM token (used for budget capping)
+    chars_per_token: int = 4
+    # Default context budget in tokens when not specified
+    default_budget_tokens: int = 3000
+
+CONTEXT_CONFIG = ContextConfig()
+
+# Per-agent retrieval query sets.
+# Each agent gets 2–4 targeted sub-queries instead of one generic string.
+# Keys are agent IDs matching AGENT_NAMES above.
+AGENT_CONTEXT_QUERIES: dict[int, list[str]] = {
+    3: [  # Revenue Forensics
+        "revenue recognition policy deferred revenue contract assets",
+        "channel stuffing year-end revenue spike reversals",
+        "accounts receivable growth DSO days sales outstanding",
+        "revenue breakdown segment geographic concentration",
+    ],
+    4: [  # Cash Flow Forensics
+        "operating cash flow OCF EBITDA non-cash reconciliation",
+        "capital expenditure capex free cash flow FCF",
+        "working capital changes cash from operations",
+        "financing activities debt issuance equity dilution dividends",
+    ],
+    5: [  # Working Capital
+        "accounts receivable inventory days DIO DPO DSO",
+        "cash conversion cycle working capital efficiency",
+        "payables stretching creditor days payable outstanding",
+        "depreciation asset useful life DEPI",
+    ],
+    6: [  # Fraud Detection
+        "accruals non-cash income earnings management manipulation",
+        "revenue recognition aggressive accounting restatement",
+        "goodwill impairment asset write-offs intangibles",
+        "related party transactions audit qualifications",
+    ],
+    7: [  # Credit Risk
+        "debt leverage interest coverage ratio ICR EBIT interest expense",
+        "credit rating downgrade watch negative outlook",
+        "long term debt maturity schedule covenant breach refinancing",
+        "going concern liquidity cash reserves short-term obligations",
+    ],
+    8: [  # Earnings Quality
+        "accruals net operating assets NOA balance sheet inflation",
+        "EBITDA operating profit margin conversion OCF",
+        "one-time gains exceptional items non-recurring income",
+        "earnings per share guidance vs actual delivery",
+    ],
+    9: [  # Related Party
+        "related party transactions promoter loans inter-company",
+        "director remuneration management fees transfer pricing",
+        "corporate guarantees pledged shares promoter group entities",
+        "SEBI RPT disclosure approval audit committee",
+    ],
+    10: [  # Auditor Intelligence
+        "auditor report going concern opinion material uncertainty",
+        "key audit matters KAM emphasis of matter paragraph",
+        "material weakness internal control ICFR Section 404",
+        "non-audit fees qualified adverse opinion restatement",
+    ],
+    11: [  # Management NLP
+        "MD&A management discussion analysis forward guidance",
+        "earnings call transcript CEO CFO commentary analyst questions",
+        "risk factors litigation regulatory disclosures",
+        "insider transactions promoter buying selling shares",
+    ],
+    12: [  # Peer Comparison
+        "industry average revenue growth margin EBITDA peer",
+        "sector benchmark working capital efficiency comparison",
+        "competitive position market share business model",
+    ],
+    14: [  # Investment Committee
+        "investment thesis valuation risks opportunities",
+        "competitive advantage moat management quality track record",
+        "growth catalysts risks bull bear case",
+    ],
+    17: [  # Director
+        "overall risk verdict recommendation summary",
+        "convergent red flags fraud governance credit evidence",
+        "material findings cross-validation synthesis",
+    ],
+}
+
+# ─────────────────────────────────────────────
+# OUTPUT HARNESS CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class HarnessConfig:
+    # Minimum words for an LLM response to be considered valid
+    min_response_words: int = 25
+    # Whether to append JSON schema instruction to all generic prompts
+    request_structured_output: bool = True
+    # Max findings to extract per agent from LLM output
+    max_findings_per_agent: int = 12
+    # Per-agent LLM call timeout in seconds (for ThreadPoolExecutor)
+    agent_timeout_seconds: int = 90
+
+HARNESS_CONFIG = HarnessConfig()
+
+# ─────────────────────────────────────────────
+# PEER INDUSTRY MAPPING
+# ─────────────────────────────────────────────
 INDUSTRY_PEER_GROUPS = {
     "IT_SERVICES": ["Infosys", "TCS", "Wipro", "HCL Technologies", "Tech Mahindra", "Accenture", "IBM"],
     "BANKING": ["HDFC Bank", "ICICI Bank", "State Bank of India", "Axis Bank", "Kotak Mahindra"],

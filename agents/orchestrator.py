@@ -15,7 +15,9 @@ from typing import TypedDict
 from pathlib import Path
 from loguru import logger
 
-from config import LLM_CONFIG
+from config import LLM_CONFIG, HARNESS_CONFIG, AGENT_CONTEXT_QUERIES
+from llm.context_builder import ContextBuilder
+from llm.output_harness import OutputHarness
 from llm.llm_manager import LLMManager
 from rag.embeddings import EmbeddingModel
 from rag.vector_store import VectorStore
@@ -65,28 +67,47 @@ class InvestigationState(TypedDict):
     start_time: str
 
 
-# ─── Shared Context Builder ──────────────────────────────────────
+# ─── Shared utilities ────────────────────────────────────────────
+
+_harness = OutputHarness()  # singleton for orchestrator-level use
+
 
 def _build_inter_agent_context(agent_results: dict[int, AgentResult]) -> str:
     """
-    Summarize completed agent findings for injection into later agent prompts.
-    Enables agents to build on — and cross-check — each other's findings.
+    Build structured inter-agent context for injection into Phase C/D prompts.
+
+    Format:
+      [Agent N — Name]  Risk: XX.X/100 | Red: N | Green: N | Status: S
+        Summary (up to 300 chars)
+        ⚠ [LEVEL] Finding title
+        ⚠ [LEVEL] Finding title  (top 4)
     """
     if not agent_results:
         return ""
 
-    lines = ["=== PRIOR AGENT FINDINGS (inter-agent context) ==="]
+    lines = ["=== PRIOR AGENT FINDINGS (cross-agent intelligence) ==="]
     for agent_id in sorted(agent_results.keys()):
         r = agent_results[agent_id]
         lines.append(
-            f"\n[Agent {agent_id} — {r.agent_name}] Risk: {r.risk_score:.1f}/100 | "
-            f"Red Flags: {len(r.red_flags)} | Status: {r.status}"
+            f"\n[Agent {agent_id} — {r.agent_name}]  "
+            f"Risk: {r.risk_score:.1f}/100 | Red Flags: {len(r.red_flags)} | "
+            f"Green Flags: {len(r.green_flags)} | Status: {r.status}"
         )
         if r.summary:
-            lines.append(f"  {r.summary[:300]}")
-        for flag in r.red_flags[:3]:
-            lines.append(f"  ⚠ [{flag.risk_level}] {flag.title[:80]}")
-    lines.append("=== END PRIOR AGENT FINDINGS ===\n")
+            # Include first 300 chars of summary, but strip the redundant header
+            summary_text = r.summary[:300].split("\n")[0]
+            lines.append(f"  Summary: {summary_text}")
+        # Top 4 red flags by severity
+        severity_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+        sorted_flags = sorted(
+            r.red_flags, key=lambda f: severity_order.get(f.risk_level, 4)
+        )
+        for flag in sorted_flags[:4]:
+            evidence_snippet = (f" | Evidence: {flag.evidence[:60]}" if flag.evidence else "")
+            lines.append(f"  ⚠ [{flag.risk_level}] {flag.title[:90]}{evidence_snippet}")
+        if r.green_flags:
+            lines.append(f"  ✓ [{len(r.green_flags)} green flag(s)] {r.green_flags[0].title[:80]}")
+    lines.append("\n=== END PRIOR AGENT FINDINGS ===\n")
     return "\n".join(lines)
 
 
@@ -341,16 +362,29 @@ class ForensicOrchestrator:
 
     def _run_parallel(self, items: list, run_fn, max_workers: int = 8) -> dict[int, AgentResult]:
         """
-        Cloud → ThreadPoolExecutor; local → sequential loop.
+        Cloud → ThreadPoolExecutor with per-agent timeout; local → sequential loop.
         Each element of `items` is unpacked as positional args to run_fn,
         which must return (agent_id, AgentResult).
         """
+        timeout = HARNESS_CONFIG.agent_timeout_seconds
         results: dict[int, AgentResult] = {}
         if self._supports_parallel_requests():
             with concurrent.futures.ThreadPoolExecutor(max_workers=min(max_workers, len(items))) as executor:
                 futures = {executor.submit(run_fn, *item): item[0] for item in items}
-                for future in concurrent.futures.as_completed(futures):
-                    aid, r = future.result()
+                for future in concurrent.futures.as_completed(futures, timeout=timeout * len(items)):
+                    aid = futures[future]
+                    try:
+                        aid, r = future.result(timeout=timeout)
+                    except concurrent.futures.TimeoutError:
+                        logger.error(f"Agent {aid} timed out after {timeout}s")
+                        from config import AGENT_NAMES
+                        r = AgentResult(aid, AGENT_NAMES.get(aid, f"Agent {aid}"),
+                                        status="FAILED", error=f"Timed out after {timeout}s")
+                    except Exception as e:
+                        logger.error(f"Agent {aid} raised: {e}")
+                        from config import AGENT_NAMES
+                        r = AgentResult(aid, AGENT_NAMES.get(aid, f"Agent {aid}"),
+                                        status="FAILED", error=str(e))
                     results[aid] = r
         else:
             for item in items:
@@ -403,7 +437,12 @@ class ForensicOrchestrator:
         financial_data, retriever, storage, audit,
         inter_agent_context: str = "", cv_context: str = "",
     ) -> AgentResult:
-        """LLM-based generic agent with inter-agent context injection."""
+        """
+        LLM-based generic agent with:
+        - Multi-query context retrieval (ContextBuilder)
+        - Structured output extraction (OutputHarness)
+        - Inter-agent context injection
+        """
         from llm.prompts import SYSTEM_PROMPTS, build_analysis_prompt
 
         role_map = {
@@ -423,7 +462,14 @@ class ForensicOrchestrator:
         role = role_map.get(agent_type, "forensic_accountant")
         question = question_map.get(agent_type, "Perform forensic analysis.")
 
-        context = retriever.get_context_for_agent(company_name, question, max_tokens=1800)
+        # Multi-query context retrieval
+        ctx_builder = ContextBuilder(retriever)
+        agent_queries = AGENT_CONTEXT_QUERIES.get(agent_id, [question])
+        context = ctx_builder.build(
+            company_name=company_name,
+            queries=([question] + agent_queries) if agent_queries else [question],
+            budget_tokens=2200,
+        )
         years = sorted(financial_data.keys(), reverse=True)
 
         prompt = build_analysis_prompt(
@@ -432,27 +478,39 @@ class ForensicOrchestrator:
             financial_data={y: financial_data[y] for y in years[:3]} if years else {},
             extracted_text=context, question=question,
         )
-        # Inject inter-agent context and cross-validation
         if inter_agent_context:
             prompt = inter_agent_context + "\n" + prompt
         if cv_context:
             prompt += f"\n\n{cv_context}"
+        # Append structured output instruction
+        prompt += _harness.structured_output_suffix()
 
         raw_analysis = self.llm.generate(
             prompt, SYSTEM_PROMPTS.get(role, SYSTEM_PROMPTS["forensic_accountant"]),
             max_tokens=2048,
         )
 
+        # Structured extraction via harness
+        harness_result = _harness.extract(raw_analysis, company_name=company_name)
         result = AgentResult(agent_id=agent_id, agent_name=agent_name)
         result.raw_analysis = raw_analysis
-        result.risk_score = self._estimate_risk_from_text(raw_analysis)
-        result.summary = f"{agent_name}:\n{raw_analysis[:500]}..."
-        result.findings, result.red_flags, result.green_flags = self._parse_llm_findings(
-            raw_analysis, agent_id, agent_name, audit
+        result.risk_score = (
+            harness_result.extracted_risk_score
+            if harness_result.extracted_risk_score is not None
+            else _harness.estimate_risk_score(raw_analysis)
+        )
+        result.summary = f"{agent_name}: {raw_analysis[:400]}..."
+        result.findings, result.red_flags, result.green_flags = self._findings_from_harness(
+            harness_result, agent_id, agent_name, audit
         )
 
         filename = f"agent_{agent_id:02d}_{agent_name.replace(' ', '_')[:30]}.json"
-        storage.save_json({"analysis": raw_analysis, "risk_score": result.risk_score}, filename, "Agent_Outputs")
+        storage.save_json({
+            "analysis": raw_analysis,
+            "risk_score": result.risk_score,
+            "parse_method": harness_result.parse_method,
+            "quality_score": harness_result.quality_score,
+        }, filename, "Agent_Outputs")
         return result
 
     # ─── Investment Committee Perspectives ───────────────────────────
@@ -475,10 +533,13 @@ class ForensicOrchestrator:
         from llm.prompts import SYSTEM_PROMPTS, build_analysis_prompt
 
         years = sorted(financial_data.keys(), reverse=True)
-        context = retriever.get_context_for_agent(
-            company_name,
-            "investment thesis valuation risks opportunities competitive position",
-            max_tokens=2000,
+        ctx_builder = ContextBuilder(retriever)
+        context = ctx_builder.build(
+            company_name=company_name,
+            queries=AGENT_CONTEXT_QUERIES.get(14, [
+                "investment thesis valuation risks opportunities competitive position",
+            ]),
+            budget_tokens=2000,
         )
         base_prompt = build_analysis_prompt(
             agent_role="Investment Committee",
@@ -788,40 +849,44 @@ class ForensicOrchestrator:
         return match.group() if match else ""
 
     def _estimate_risk_from_text(self, text: str) -> float:
-        text_lower = text.lower()
-        score = 50.0
-        score += text_lower.count("critical") * 5
-        score += text_lower.count("high risk") * 4
-        score += text_lower.count("red flag") * 3
-        score += text_lower.count("concern") * 2
-        score += text_lower.count("manipulation") * 6
-        score -= text_lower.count("healthy") * 3
-        score -= text_lower.count("low risk") * 3
-        score -= text_lower.count("well managed") * 2
-        score -= text_lower.count("clean audit") * 3
-        return max(10.0, min(95.0, score))
+        """Delegate to the OutputHarness which extracts numeric score first."""
+        return _harness.estimate_risk_score(text)
+
+    def _findings_from_harness(
+        self, harness_result, agent_id: int, agent_name: str, audit: AuditTrail
+    ):
+        """
+        Convert OutputHarness ParsedFinding list to AgentFinding objects
+        and log each to the audit trail.
+        """
+        findings, red_flags, green_flags = [], [], []
+        for pf in harness_result.findings[:HARNESS_CONFIG.max_findings_per_agent]:
+            f = AgentFinding(
+                agent_id=agent_id,
+                agent_name=agent_name,
+                finding_type=pf.flag_type,
+                title=pf.title,
+                detail=pf.detail,
+                evidence=pf.evidence,
+                risk_level=pf.risk_level,
+                confidence=pf.confidence,
+            )
+            findings.append(f)
+            if pf.flag_type == "RED_FLAG":
+                red_flags.append(f)
+                audit.log_red_flag(
+                    agent_id, agent_name, pf.title, pf.evidence,
+                    severity=pf.risk_level,
+                )
+            elif pf.flag_type == "GREEN_FLAG":
+                green_flags.append(f)
+                audit.log_green_flag(agent_id, agent_name, pf.title, pf.evidence)
+        return findings, red_flags, green_flags
 
     def _parse_llm_findings(self, text: str, agent_id: int, agent_name: str, audit: AuditTrail):
-        findings, red_flags, green_flags = [], [], []
-        for line in text.split("\n"):
-            line = line.strip()
-            if not line or len(line) < 20:
-                continue
-            if any(kw in line.lower() for kw in ["red flag", "⚠️", "concern", "risk", "manipulation", "inflated"]):
-                f = AgentFinding(
-                    agent_id=agent_id, agent_name=agent_name, finding_type="RED_FLAG",
-                    title=line[:80], detail=line, evidence=line,
-                    risk_level="HIGH", confidence=0.65,
-                )
-                findings.append(f); red_flags.append(f)
-            elif any(kw in line.lower() for kw in ["✅", "strong", "positive", "healthy", "quality"]):
-                f = AgentFinding(
-                    agent_id=agent_id, agent_name=agent_name, finding_type="GREEN_FLAG",
-                    title=line[:80], detail=line, evidence=line,
-                    risk_level="POSITIVE", confidence=0.65,
-                )
-                findings.append(f); green_flags.append(f)
-        return findings, red_flags, green_flags
+        """Legacy wrapper — routes through OutputHarness for backward compatibility."""
+        harness_result = _harness.extract(text)
+        return self._findings_from_harness(harness_result, agent_id, agent_name, audit)
 
     def _generate_reports(
         self, company_name, company_id, financial_data, agent_results,

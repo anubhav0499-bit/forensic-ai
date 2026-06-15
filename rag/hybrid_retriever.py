@@ -94,6 +94,40 @@ class HybridRetriever:
         except Exception:
             return candidates[:n_results]
 
+    def search_multi(
+        self,
+        company_name: str,
+        queries: list[str],
+        n_per_query: int = 6,
+    ) -> list[dict]:
+        """
+        Run multiple queries and merge results via RRF, preserving diversity.
+        Deduplication is handled downstream by ContextBuilder; here we just
+        merge and re-rank across all queries.
+        """
+        merged_scores: dict[str, float] = {}
+        result_map: dict[str, dict] = {}
+
+        for q_idx, query in enumerate(queries):
+            results = self.search(company_name, query, n_results=n_per_query)
+            for rank, result in enumerate(results):
+                key = result["content"][:100]
+                # Boost earlier queries slightly (primary query is most relevant)
+                query_weight = 1.0 / (1 + q_idx * 0.15)
+                rrf_contribution = query_weight / (self.rrf_k + rank + 1)
+                merged_scores[key] = merged_scores.get(key, 0) + rrf_contribution
+                if key not in result_map:
+                    result_map[key] = result
+
+        ranked = sorted(merged_scores.items(), key=lambda x: x[1], reverse=True)
+        results = []
+        for key, score in ranked:
+            if key in result_map:
+                r = result_map[key].copy()
+                r["hybrid_score"] = score
+                results.append(r)
+        return results
+
     def get_context_for_agent(
         self,
         company_name: str,
