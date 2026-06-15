@@ -35,9 +35,24 @@ GOOGLE_API_KEY      = os.getenv("GOOGLE_API_KEY", "")
 GROQ_API_KEY        = os.getenv("GROQ_API_KEY", "")
 TOGETHER_API_KEY    = os.getenv("TOGETHER_API_KEY", "")
 OPENROUTER_API_KEY  = os.getenv("OPENROUTER_API_KEY", "")
+MISTRAL_API_KEY     = os.getenv("MISTRAL_API_KEY", "")
+COHERE_API_KEY      = os.getenv("COHERE_API_KEY", "")
+TAVILY_API_KEY      = os.getenv("TAVILY_API_KEY", "")
+SERPER_API_KEY      = os.getenv("SERPER_API_KEY", "")
+SERPAPI_API_KEY     = os.getenv("SERPAPI_API_KEY", "")
+
+# AWS Bedrock
+AWS_ACCESS_KEY_ID     = os.getenv("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+AWS_REGION_NAME       = os.getenv("AWS_REGION_NAME", "us-east-1")
+
+# Azure OpenAI
+AZURE_OPENAI_API_KEY  = os.getenv("AZURE_OPENAI_API_KEY", "")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "")
 
 # Force a provider or use cascade (auto).
-# Values: auto | groq | openai | anthropic | gemini | together | openrouter | lmstudio | ollama | hf
+# Values: auto | openai | anthropic | google | groq | together | openrouter |
+#         mistral | cohere | ollama | lmstudio | bedrock | azure | hf
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "auto")
 
 # Per-provider model names (override individually via env if needed)
@@ -46,14 +61,22 @@ PROVIDER_MODELS: dict[str, dict[str, str]] = {
                     "fast":    os.getenv("GROQ_FAST_MODEL",    "llama-3.1-8b-instant")},
     "openai":      {"primary": os.getenv("OPENAI_MODEL",       "gpt-4o"),
                     "fast":    os.getenv("OPENAI_FAST_MODEL",   "gpt-4o-mini")},
-    "anthropic":   {"primary": os.getenv("ANTHROPIC_MODEL",    "claude-opus-4-8"),
+    "anthropic":   {"primary": os.getenv("ANTHROPIC_MODEL",    "claude-sonnet-4-6"),
                     "fast":    os.getenv("ANTHROPIC_FAST_MODEL","claude-haiku-4-5-20251001")},
-    "gemini":      {"primary": os.getenv("GEMINI_MODEL",       "gemini-1.5-flash"),
+    "gemini":      {"primary": os.getenv("GEMINI_MODEL",       "gemini-1.5-pro-latest"),
                     "fast":    os.getenv("GEMINI_FAST_MODEL",   "gemini-2.0-flash")},
     "together":    {"primary": os.getenv("TOGETHER_MODEL",     "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
                     "fast":    os.getenv("TOGETHER_FAST_MODEL", "meta-llama/Llama-3.1-8B-Instruct-Turbo")},
     "openrouter":  {"primary": os.getenv("OPENROUTER_MODEL",   "anthropic/claude-3.5-sonnet"),
                     "fast":    os.getenv("OPENROUTER_FAST_MODEL","google/gemini-flash-1.5")},
+    "mistral":     {"primary": os.getenv("MISTRAL_MODEL",      "mistral-large-latest"),
+                    "fast":    os.getenv("MISTRAL_FAST_MODEL",  "mistral-small-latest")},
+    "cohere":      {"primary": os.getenv("COHERE_MODEL",       "command-r-plus"),
+                    "fast":    os.getenv("COHERE_FAST_MODEL",   "command-r")},
+    "bedrock":     {"primary": os.getenv("BEDROCK_MODEL",      "anthropic.claude-3-5-sonnet-20241022-v2:0"),
+                    "fast":    os.getenv("BEDROCK_FAST_MODEL",  "anthropic.claude-3-haiku-20240307-v1:0")},
+    "azure":       {"primary": os.getenv("AZURE_OPENAI_DEPLOYMENT",      "gpt-4o"),
+                    "fast":    os.getenv("AZURE_OPENAI_FAST_DEPLOYMENT",  "gpt-4o-mini")},
     "lmstudio":    {"primary": os.getenv("LMSTUDIO_MODEL",     "local-model"),
                     "fast":    os.getenv("LMSTUDIO_FAST_MODEL", "local-model")},
     "ollama":      {"primary": os.getenv("OLLAMA_MODEL",        "qwen2.5:7b"),
@@ -545,6 +568,27 @@ class HarnessConfig:
     agent_timeout_seconds: int = 90
 
 HARNESS_CONFIG = HarnessConfig()
+
+# ─────────────────────────────────────────────
+# AGENTIC RAG CONFIGURATION
+# LangGraph + LlamaIndex + LangChain pipeline
+# ─────────────────────────────────────────────
+@dataclass
+class AgenticRAGConfig:
+    # Enable the full LangGraph pipeline; set False to use classic path
+    enabled: bool = os.getenv("AGENTIC_RAG_ENABLED", "true").lower() == "true"
+    # Max query-rewrite cycles per agent before accepting response
+    max_iterations: int = int(os.getenv("AGENTIC_RAG_MAX_ITER", "3"))
+    # Enable LlamaIndex for vector retrieval (vs. existing HybridRetriever)
+    use_llamaindex: bool = os.getenv("LLAMAINDEX_ENABLED", "true").lower() == "true"
+    # Enable internet search in the agentic pipeline
+    internet_search_enabled: bool = os.getenv("INTERNET_SEARCH_ENABLED", "true").lower() == "true"
+    # Enable live financial data via yfinance / tools_api source
+    tools_api_enabled: bool = os.getenv("TOOLS_API_ENABLED", "true").lower() == "true"
+    # Preferred internet search provider: tavily | duckduckgo | serper | serpapi
+    search_provider: str = os.getenv("SEARCH_PROVIDER", "duckduckgo")
+
+AGENTIC_RAG_CONFIG = AgenticRAGConfig()
 
 # ─────────────────────────────────────────────
 # PEER INDUSTRY MAPPING

@@ -17,7 +17,7 @@ from rag.hybrid_retriever import HybridRetriever
 from database.sqlite_handler import SQLiteHandler
 from utils.audit_trail import AuditTrail
 from utils.storage import StorageManager
-from config import AGENT_NAMES, AGENT_CONTEXT_QUERIES, CONTEXT_CONFIG, HARNESS_CONFIG
+from config import AGENT_NAMES, AGENT_CONTEXT_QUERIES, CONTEXT_CONFIG, HARNESS_CONFIG, AGENTIC_RAG_CONFIG
 
 
 @dataclass
@@ -156,6 +156,66 @@ class BaseForensicAgent(ABC):
             prompt = prompt + self._harness.structured_output_suffix()
         raw = self.llm.generate(prompt, system_prompt, max_tokens=max_tokens)
         return self._harness.extract(raw, company_name=company_name)
+
+    def _run_agentic_rag(
+        self,
+        company_name: str,
+        query: str,
+        financial_data: dict | None = None,
+    ) -> HarnessResult:
+        """
+        Full Agentic RAG pipeline (LangGraph + LlamaIndex + LangChain).
+
+        Runs the 12-step loop:
+          query rewrite → detail check → source routing →
+          retrieval (vector DB / internet / APIs) → generation → relevance check → loop
+
+        Falls back to the classic _analyze_with_llm() path when LangGraph is
+        not installed or any step errors out, so existing agents never break.
+
+        Returns a HarnessResult so the call site is identical to
+        _analyze_and_extract().
+        """
+        if not AGENTIC_RAG_CONFIG.enabled:
+            context = self._retrieve_context(company_name, query)
+            return self._analyze_and_extract(context + "\n\n" + query, company_name=company_name)
+
+        try:
+            from graph.workflow import run_agentic_rag
+            final_state = run_agentic_rag(
+                company_name=company_name,
+                agent_name=self.agent_name,
+                agent_id=self.agent_id,
+                query=query,
+                financial_data=financial_data or {},
+                max_iterations=AGENTIC_RAG_CONFIG.max_iterations,
+            )
+            raw_text = final_state.get("final_response") or final_state.get("response", "")
+            harness_result = self._harness.extract(raw_text, company_name=company_name)
+            # Merge structured findings from the graph state
+            if final_state.get("findings"):
+                from llm.output_harness import ParsedFinding
+                graph_findings = [
+                    ParsedFinding(
+                        flag_type =f.get("flag_type", "RED_FLAG"),
+                        risk_level=f.get("risk_level", "MEDIUM"),
+                        title     =f.get("title", ""),
+                        detail    =f.get("detail", ""),
+                        evidence  =f.get("evidence", ""),
+                        confidence=f.get("confidence", 0.65),
+                    )
+                    for f in final_state["findings"]
+                ]
+                harness_result.findings = graph_findings
+            if final_state.get("risk_score"):
+                harness_result.extracted_risk_score = final_state["risk_score"]
+            return harness_result
+        except Exception as exc:
+            self.log_warning(f"Agentic RAG pipeline error — falling back to classic path: {exc}")
+            context = self._retrieve_context(company_name, query)
+            return self._analyze_and_extract(
+                context + "\n\nQuery: " + query, company_name=company_name
+            )
 
     def _create_finding(
         self,

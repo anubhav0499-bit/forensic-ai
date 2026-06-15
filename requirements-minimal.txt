@@ -1,15 +1,35 @@
 # ─────────────────────────────────────────────────────────────────────
 # FORENSIC AI — Minimal Requirements (Colab / Quick Start)
-# Uses free cloud API (Groq or Gemini) — no GPU, no Ollama needed.
+# Agentic RAG architecture: LangChain + LlamaIndex + LangGraph
+# Works with any LLM provider; DuckDuckGo search is free (no key).
 #
 # Install: pip install -r requirements-minimal.txt
-# Then:    Set GROQ_API_KEY or GOOGLE_API_KEY in your environment / Colab secrets
+# Then:    Set any one of: GROQ_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY, etc.
 # ─────────────────────────────────────────────────────────────────────
 
-# LLM (pick one free option — openai package covers Groq too)
-openai>=1.35.0              # Groq, LM Studio, OpenRouter (all OpenAI-compatible)
+# Agentic RAG core (required)
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0    # DuckDuckGo search (free, no key needed)
+duckduckgo-search>=6.0.0
+
+# LlamaIndex retrieval
+llama-index>=0.11.0
+llama-index-core>=0.11.0
+llama-index-embeddings-huggingface>=0.3.0
+llama-index-vector-stores-chroma>=0.2.0
+
+# LLM providers (install ONE or more; all are fully supported — no free bias)
+openai>=1.35.0              # OpenAI, Groq, LM Studio, OpenRouter (OpenAI-compatible)
 google-generativeai>=0.7.0  # Google Gemini
-anthropic>=0.31.0           # Anthropic Claude (optional)
+anthropic>=0.31.0           # Anthropic Claude
+
+# LangChain provider adapters matching the providers above
+langchain-openai>=0.2.0
+langchain-google-genai>=2.0.0
+langchain-anthropic>=0.2.0
+langchain-groq>=0.2.0
 
 # Core
 python-dotenv>=1.0.0

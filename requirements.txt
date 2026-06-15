@@ -9,10 +9,45 @@ uvicorn>=0.27.0
 pydantic>=2.5.0
 python-dotenv>=1.0.0
 
-# LLM Backends — Cloud Providers (lightweight, install only what you use)
+# ─────────────────────────────────────────────────────────────────────
+# AGENTIC RAG FRAMEWORK (LangChain + LlamaIndex + LangGraph)
+# ─────────────────────────────────────────────────────────────────────
+
+# LangGraph — multi-agent state machine orchestration
+langgraph>=0.2.0
+langchain-core>=0.3.0
+
+# LangChain — agent/chain construction + tool integrations
+langchain>=0.3.0
+langchain-community>=0.3.0    # DuckDuckGo, Serper, SerpAPI, Tavily tools
+
+# LangChain provider packages (install the ones you use)
+langchain-openai>=0.2.0        # OpenAI, Azure OpenAI, Groq, LM Studio, OpenRouter
+langchain-anthropic>=0.2.0     # Anthropic Claude
+langchain-google-genai>=2.0.0  # Google Gemini
+langchain-groq>=0.2.0          # Groq cloud inference
+langchain-together>=0.2.0      # Together AI
+langchain-mistralai>=0.2.0     # Mistral AI
+langchain-cohere>=0.3.0        # Cohere Command-R
+langchain-ollama>=0.2.0        # Ollama local inference
+langchain-aws>=0.2.0           # AWS Bedrock
+
+# LlamaIndex — context-aware retrieval pipeline
+llama-index>=0.11.0
+llama-index-core>=0.11.0
+llama-index-embeddings-huggingface>=0.3.0
+llama-index-vector-stores-chroma>=0.2.0
+
+# Internet search (DuckDuckGo free; others need API keys)
+duckduckgo-search>=6.0.0       # Used by langchain-community DuckDuckGoSearchRun
+tavily-python>=0.5.0           # Optional: set TAVILY_API_KEY
+
+# ─────────────────────────────────────────────────────────────────────
+# LLM Backends — Cloud Providers
+# ─────────────────────────────────────────────────────────────────────
 openai>=1.35.0              # OpenAI + Groq + LM Studio + OpenRouter (all OpenAI-compatible)
-anthropic>=0.31.0           # Anthropic Claude
-google-generativeai>=0.7.0  # Google Gemini (free tier available)
+anthropic>=0.31.0           # Anthropic Claude (also used by langchain-anthropic)
+google-generativeai>=0.7.0  # Google Gemini (also used by langchain-google-genai)
 
 # LLM Backends — Local Inference (heavy; skip when using cloud APIs)
 transformers>=4.40.0
