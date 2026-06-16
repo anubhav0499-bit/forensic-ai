@@ -75,6 +75,9 @@ class DocumentChunker:
 
         return {k: v for k, v in sections.items() if len(v.strip()) > 50}
 
+    # Sentence-ending punctuation for boundary snapping
+    _SENT_END = re.compile(r"[.!?][\"'\)\]]*\s*$")
+
     def _chunk_section(
         self,
         text: str,
@@ -82,33 +85,34 @@ class DocumentChunker:
         section: str,
         fiscal_year: str,
     ) -> list[DocumentChunk]:
-        """Chunk a section with overlap."""
+        """Chunk a section with overlap, snapping boundaries to sentence ends."""
         chunks = []
         words = text.split()
 
-        if len(words) == 0:
+        if not words:
             return chunks
 
-        # Determine chunk type
         chunk_type = self._classify_section(section)
+        step    = self.chunk_size * 2 if chunk_type == "table" else self.chunk_size
+        overlap = self.chunk_overlap
 
-        # For tables, use larger chunks
-        if chunk_type == "table":
-            step = self.chunk_size * 2
-            overlap = self.chunk_overlap
-        else:
-            step = self.chunk_size
-            overlap = self.chunk_overlap
-
-        # Slide window over words
         i = 0
         chunk_idx = 0
         while i < len(words):
             end = min(i + step, len(words))
+
+            # Snap end boundary forward to the next sentence end (up to 30 words)
+            if end < len(words):
+                snap_limit = min(end + 30, len(words))
+                for j in range(end, snap_limit):
+                    if self._SENT_END.search(words[j]):
+                        end = j + 1
+                        break
+
             chunk_words = words[i:end]
             content = " ".join(chunk_words)
 
-            chunk = DocumentChunk(
+            chunks.append(DocumentChunk(
                 chunk_id=f"{source}_{section}_{chunk_idx}",
                 content=content,
                 chunk_type=chunk_type,
@@ -117,10 +121,9 @@ class DocumentChunker:
                 fiscal_year=fiscal_year,
                 word_count=len(chunk_words),
                 metadata={"section": section, "fiscal_year": fiscal_year},
-            )
-            chunks.append(chunk)
+            ))
 
-            i += max(1, step - overlap)
+            i += max(1, end - i - overlap)
             chunk_idx += 1
 
         return chunks

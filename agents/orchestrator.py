@@ -15,10 +15,24 @@ from typing import TypedDict
 from pathlib import Path
 from loguru import logger
 
-from config import LLM_CONFIG, HARNESS_CONFIG, AGENT_CONTEXT_QUERIES
+from config import LLM_CONFIG, HARNESS_CONFIG, AGENT_CONTEXT_QUERIES, AGENTIC_RAG_CONFIG
 from llm.context_builder import ContextBuilder
 from llm.output_harness import OutputHarness
 from llm.llm_manager import LLMManager
+
+
+def _llm_generate(prompt: str, system: str = "", max_tokens: int = 2048, llm=None) -> str:
+    """
+    Unified LLM call: tries LangChain client first (all 12 providers),
+    falls back to legacy LLMManager if needed.
+    """
+    try:
+        from llm.langchain_client import lc_invoke
+        return lc_invoke(prompt, system=system, fast=False)
+    except Exception:
+        if llm is not None:
+            return llm.generate(prompt, system, max_tokens=max_tokens)
+        return "[LLM unavailable]"
 from rag.embeddings import EmbeddingModel
 from rag.vector_store import VectorStore
 from rag.bm25_retriever import BM25Retriever
@@ -485,9 +499,11 @@ class ForensicOrchestrator:
         # Append structured output instruction
         prompt += _harness.structured_output_suffix()
 
-        raw_analysis = self.llm.generate(
-            prompt, SYSTEM_PROMPTS.get(role, SYSTEM_PROMPTS["forensic_accountant"]),
+        raw_analysis = _llm_generate(
+            prompt,
+            system=SYSTEM_PROMPTS.get(role, SYSTEM_PROMPTS["forensic_accountant"]),
             max_tokens=2048,
+            llm=self.llm,
         )
 
         # Structured extraction via harness
@@ -563,9 +579,11 @@ class ForensicOrchestrator:
         for label, role, task in role_configs:
             prompt = f"{base_prompt}\n\nYOUR TASK: {task}"
             try:
-                perspectives[label] = self.llm.generate(
-                    prompt, SYSTEM_PROMPTS.get(role, SYSTEM_PROMPTS["forensic_accountant"]),
+                perspectives[label] = _llm_generate(
+                    prompt,
+                    system=SYSTEM_PROMPTS.get(role, SYSTEM_PROMPTS["forensic_accountant"]),
                     max_tokens=1500,
+                    llm=self.llm,
                 )
             except Exception as e:
                 logger.error(f"Perspectives/{label} failed: {e}")
@@ -628,10 +646,11 @@ class ForensicOrchestrator:
         )
 
         from llm.prompts import SYSTEM_PROMPTS
-        refinement_analysis = self.llm.generate(
+        refinement_analysis = _llm_generate(
             refinement_prompt,
-            SYSTEM_PROMPTS.get("investment_director", SYSTEM_PROMPTS["forensic_accountant"]),
+            system=SYSTEM_PROMPTS.get("investment_director", SYSTEM_PROMPTS["forensic_accountant"]),
             max_tokens=1500,
+            llm=self.llm,
         )
 
         # Append refinement to director result

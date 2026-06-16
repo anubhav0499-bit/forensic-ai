@@ -32,7 +32,7 @@ def _print_banner() -> None:
 ╔══════════════════════════════════════════════════════════════╗
 ║              FORENSIC AI — INSTITUTIONAL EDITION             ║
 ║    Multi-Agent Forensic Accounting & Financial Intelligence  ║
-║    Evidence-First | No Paid APIs | 100% Local | Open Source  ║
+║    Agentic RAG | LangChain + LlamaIndex + LangGraph          ║
 ╚══════════════════════════════════════════════════════════════╝
 """
     print(banner)

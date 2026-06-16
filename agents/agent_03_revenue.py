@@ -226,29 +226,24 @@ class RevenueForensicsAgent(BaseForensicAgent):
                     result.findings.append(f)
                     scores.append(30)
 
-        # ── 6. LLM Synthesis ─────────────────────────────────────
-        context = self._retrieve_context(
-            company_name,
-            "revenue recognition policy deferred revenue channel stuffing quarterly sales breakdown",
-        )
+        # ── 6. Agentic RAG Synthesis ──────────────────────────────────
         quant_summary = (
-            f"Quantitative checks found {len(result.red_flags)} red flags. "
-            + ("; ".join(f.title for f in result.red_flags[:5]) if result.red_flags else "No major quantitative red flags.")
+            f"{len(result.red_flags)} quantitative red flags: "
+            + ("; ".join(f.title for f in result.red_flags[:5]) if result.red_flags else "none detected.")
         )
-        years_data = {y: financial_data[y] for y in years[:3]}
-        prompt = (
-            f"REVENUE FORENSICS — {company_name}\n\n"
-            f"Quantitative Pre-Analysis:\n{quant_summary}\n\n"
-            f"Financial Data (last 3Y):\n{str(years_data)[:2000]}\n\n"
-            f"Document Context:\n{context}\n\n"
-            "Investigate:\n"
-            "1. Revenue recognition policies — are they conservative or aggressive?\n"
-            "2. Any channel-stuffing patterns, return provisions, or customer concentration?\n"
-            "3. Deferred revenue and unearned revenue trends.\n"
-            "4. Qualitative management language around revenue guidance.\n"
-            "Format: Evidence → Analysis → Conclusion for each finding."
+        rag_result = self._run_agentic_rag(
+            company_name,
+            (
+                f"Revenue forensics — {quant_summary}. "
+                "Investigate: revenue recognition policy (conservative vs aggressive), "
+                "channel stuffing, AR/revenue divergence, deferred revenue pull-forward, "
+                "Q4 skew, and management guidance language."
+            ),
+            financial_data,
         )
-        result.raw_analysis = self._analyze_with_llm(prompt, "forensic_accountant", max_tokens=2048)
+        result.raw_analysis = rag_result.raw_text
+        if rag_result.extracted_risk_score and not scores:
+            result.risk_score = max(10.0, min(95.0, rag_result.extracted_risk_score))
 
         # ── Scoring ───────────────────────────────────────────────
         base = sum(scores) / len(scores) if scores else 35.0

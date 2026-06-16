@@ -191,10 +191,11 @@ class ProcessingConfig:
     ocr_language: str = "eng"
     ocr_confidence_threshold: float = 60.0
 
-    # Chunking
-    chunk_size: int = 512
-    chunk_overlap: int = 64
-    table_chunk_size: int = 1024
+    # Chunking — 400 words ≈ 500 tokens; large enough for multi-sentence financial
+    # reasoning, small enough to fit several chunks in a 4096-token context window.
+    chunk_size: int = 400
+    chunk_overlap: int = 80
+    table_chunk_size: int = 1200
 
     # Table extraction
     table_accuracy_threshold: float = 0.85

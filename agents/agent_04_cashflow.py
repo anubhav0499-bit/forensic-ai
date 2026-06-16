@@ -37,13 +37,15 @@ class CashFlowForensicsAgent(BaseForensicAgent):
 
         self._generate_findings(result, cf_by_year, years, company_name, financial_data)
 
-        # LLM deep analysis
-        context = self._retrieve_context(
+        # Agentic RAG synthesis
+        rag_result = self._run_agentic_rag(
             company_name,
-            "cash flow from operations capital expenditure free cash flow dividend payout"
+            "Cash flow forensics: CFO vs earnings quality, FCF sustainability, "
+            "CapEx classification and maintenance ratios, working capital cash drain, "
+            "and operating cash flow manipulation signals.",
+            financial_data,
         )
-        prompt = self._build_prompt(company_name, cf_by_year, years, context)
-        result.raw_analysis = self._analyze_with_llm(prompt, "forensic_accountant")
+        result.raw_analysis = rag_result.raw_text
 
         result.summary = self._build_summary(company_name, cf_by_year, years, result)
         self._save_output(result, company_name)

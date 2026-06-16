@@ -1,11 +1,13 @@
 """
 LLM Manager — Universal multi-provider interface
 =================================================
-Provider cascade (auto mode):
-  1. Groq          — free API, fastest inference; 12K TPM limit (use Gemini if hitting 429s)
-  2. OpenAI        — GPT-4o / GPT-4o-mini
-  3. Anthropic     — Claude Opus / Haiku
-  4. Google Gemini — Gemini 1.5 Pro / 2.0 Flash (1M TPM free — best free option for heavy use)
+Legacy native client. For new Agentic RAG code, prefer llm/langchain_client.py.
+
+Provider cascade in auto mode (first available key wins — all providers equal):
+  1. OpenAI        — GPT-4o / GPT-4o-mini
+  2. Anthropic     — Claude Sonnet / Haiku
+  3. Google Gemini — Gemini 1.5 Pro / 2.0 Flash
+  4. Groq          — ultra-fast inference
   5. Together AI   — hosted open-source models
   6. OpenRouter    — meta-router over 100+ models
   7. LM Studio     — local OpenAI-compatible server (port 1234)
@@ -41,8 +43,8 @@ _OPENAI_COMPAT: dict[str, dict] = {
     "lmstudio":   {"base_url": LLM_CONFIG.lmstudio_base_url + "/v1", "api_key": "lm-studio"},
 }
 
-# Detection priority in auto mode
-_AUTO_ORDER = ["groq", "openai", "anthropic", "gemini", "together", "openrouter", "lmstudio", "ollama", "hf"]
+# Detection priority in auto mode (all providers equal — first available key wins)
+_AUTO_ORDER = ["openai", "anthropic", "gemini", "groq", "together", "openrouter", "lmstudio", "ollama", "hf"]
 
 
 class LLMManager:
@@ -370,12 +372,12 @@ class LLMManager:
     def _template_response(self, prompt: str) -> str:
         return (
             "[NO LLM AVAILABLE — TEMPLATE MODE]\n\n"
-            "To enable analysis, set one of these environment variables:\n"
-            "  GROQ_API_KEY=...       (free at console.groq.com)\n"
-            "  GOOGLE_API_KEY=...     (free at aistudio.google.com)\n"
-            "  OPENAI_API_KEY=...     (paid)\n"
-            "  ANTHROPIC_API_KEY=...  (paid)\n"
-            "Or install Ollama: https://ollama.com  then  ollama pull qwen2.5:7b\n\n"
+            "To enable analysis, set any one of these environment variables:\n"
+            "  OPENAI_API_KEY=...     platform.openai.com\n"
+            "  ANTHROPIC_API_KEY=...  console.anthropic.com\n"
+            "  GOOGLE_API_KEY=...     aistudio.google.com (free tier available)\n"
+            "  GROQ_API_KEY=...       console.groq.com (free tier available)\n"
+            "Or run Ollama locally: https://ollama.com → ollama pull qwen2.5:7b\n\n"
             f"Prompt received (first 200 chars): {prompt[:200]}…"
         )
 

@@ -69,7 +69,7 @@ def main():
     <div class="main-header">
         <h1>🔍 FORENSIC AI</h1>
         <p>Multi-Agent Forensic Accounting & Financial Intelligence Platform</p>
-        <p>Evidence-First | No Hallucinations | Institutional Grade | 100% Local</p>
+        <p>Agentic RAG | LangChain + LlamaIndex + LangGraph | 12 LLM Providers | Open Internet Search</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -93,8 +93,9 @@ def main():
                 st.warning("LLM backend not yet initialized.")
             st.info(
                 "To change provider, set `LLM_PROVIDER` in your `.env` file.\n"
-                "Options: auto | groq | openai | anthropic | gemini | "
-                "together | openrouter | lmstudio | ollama | hf"
+                "Options: auto | openai | anthropic | google | groq | "
+                "together | openrouter | mistral | cohere | "
+                "bedrock | azure | lmstudio | ollama | hf"
             )
 
         with st.expander("📋 Investigation Settings"):

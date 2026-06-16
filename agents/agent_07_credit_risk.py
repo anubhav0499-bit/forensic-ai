@@ -57,12 +57,14 @@ class CreditRiskAgent(BaseForensicAgent):
 
         self._generate_findings(result, ratios_by_year, years, company_name, financial_data)
 
-        context = self._retrieve_context(
+        rag_result = self._run_agentic_rag(
             company_name,
-            "debt covenants credit rating interest coverage leverage liquidity refinancing maturity"
+            "Credit risk analysis: debt covenants, interest coverage ratio, Net Debt/EBITDA, "
+            "liquidity ratios, short-term debt rollover risk, credit rating trajectory, "
+            "and Altman EM Z-Score distress zone signals.",
+            financial_data,
         )
-        prompt = self._build_prompt(company_name, ratios_by_year, years, context)
-        result.raw_analysis = self._analyze_with_llm(prompt, "credit_analyst")
+        result.raw_analysis = rag_result.raw_text
 
         result.summary = self._build_summary(company_name, ratios_by_year, years, result)
         self._save_output(result, company_name)

@@ -39,6 +39,7 @@ class HarnessResult:
     parse_method: str = "none"        # json | regex | nlp | fallback
     quality_score: float = 0.0       # 0-1
     extracted_risk_score: float | None = None  # numeric score from LLM if present
+    grounding_score: float = 1.0     # 0-1 overlap with retrieved context (1.0 = no context provided)
 
 
 # ── Severity keyword patterns ──────────────────────────────────────
@@ -69,7 +70,7 @@ _FINDING_BOUNDARY = re.compile(
 )
 
 _RISK_SCORE_PATTERN = re.compile(
-    r"(?:risk.score|score|overall.risk)[:\s]+(\d{1,3}(?:\.\d)?)\s*(?:/\s*100)?",
+    r"(?:risk.score|overall.risk)(?:\s*[:=]\s*|\s+is\s+|\s+)(\d{1,3}(?:\.\d)?)\s*(?:/\s*100)?",
     re.IGNORECASE,
 )
 
@@ -106,6 +107,7 @@ class OutputHarness:
         raw_text: str,
         company_name: str = "",
         expected_keywords: list[str] | None = None,
+        retrieved_context: str = "",
     ) -> HarnessResult:
         result = HarnessResult(raw_text=raw_text)
         if not self._validate(raw_text):
@@ -113,6 +115,7 @@ class OutputHarness:
         result.is_valid = True
         result.quality_score = self._quality(raw_text, company_name, expected_keywords)
         result.extracted_risk_score = self._extract_numeric_risk(raw_text)
+        result.grounding_score = self._ground_check(raw_text, retrieved_context)
 
         # Strategy 1 — JSON
         jdata = self._parse_json(raw_text)
@@ -183,7 +186,26 @@ REQUIRED OUTPUT FORMAT — return ONLY valid JSON (no markdown fences, no prose 
     # ── Validation ─────────────────────────────────────────────────
 
     def _validate(self, text: str) -> bool:
-        return bool(text and len(text.split()) >= self._MIN_WORDS)
+        if not text:
+            return False
+        if len(text.split()) >= self._MIN_WORDS:
+            return True
+        # Strip markdown fences and recheck word count
+        clean = re.sub(r"```(?:json)?\s*|\s*```", "", text).strip()
+        if clean and len(clean.split()) >= self._MIN_WORDS:
+            return True
+        # Accept compact but structurally valid JSON — a 22-word JSON dict
+        # with findings/risk_score keys is a meaningful, valid response.
+        for candidate in (clean, text.strip()):
+            try:
+                data = json.loads(candidate)
+                if isinstance(data, dict) and any(
+                    k in data for k in ("findings", "risk_score", "summary", "recommendation")
+                ):
+                    return True
+            except (json.JSONDecodeError, ValueError):
+                pass
+        return False
 
     def _quality(
         self, text: str, company: str, keywords: list[str] | None
@@ -206,35 +228,77 @@ REQUIRED OUTPUT FORMAT — return ONLY valid JSON (no markdown fences, no prose 
 
     @staticmethod
     def _extract_numeric_risk(text: str) -> float | None:
-        m = _RISK_SCORE_PATTERN.search(text)
-        if m:
+        # Collect all matches and return the maximum — adversarial text may
+        # embed a low decoy score before the real score.
+        values = []
+        for m in _RISK_SCORE_PATTERN.finditer(text):
             try:
                 val = float(m.group(1))
                 if 0 <= val <= 100:
-                    return val
+                    values.append(val)
             except ValueError:
                 pass
-        return None
+        return max(values) if values else None
+
+    # ── Factual Grounding Check ────────────────────────────────────
+
+    @staticmethod
+    def _ground_check(response: str, context: str) -> float:
+        """
+        Measure lexical overlap between the response and retrieved context.
+        Returns 1.0 when no context is provided (cannot assess grounding).
+        Numbers are weighted 60% because fabricated statistics are the primary
+        hallucination vector in financial analysis.
+        """
+        if not context or len(context.split()) < 10:
+            return 1.0
+
+        resp_words = set(re.findall(r"\b\w{5,}\b", response.lower()))
+        ctx_words  = set(re.findall(r"\b\w{5,}\b", context.lower()))
+        resp_nums  = set(re.findall(r"\d+(?:\.\d+)?", response))
+        ctx_nums   = set(re.findall(r"\d+(?:\.\d+)?", context))
+
+        word_overlap = (
+            len(resp_words & ctx_words) / len(resp_words) if resp_words else 0.0
+        )
+        num_overlap = (
+            len(resp_nums & ctx_nums) / len(resp_nums) if resp_nums else 1.0
+        )
+        return round(0.4 * word_overlap + 0.6 * num_overlap, 3)
 
     # ── JSON Parsing ───────────────────────────────────────────────
 
     @staticmethod
     def _parse_json(text: str) -> dict:
-        clean = re.sub(r"```(?:json)?\s*|```", "", text).strip()
+        # Strategy 1: raw text as-is
+        try:
+            data = json.loads(text.strip())
+            if isinstance(data, dict):
+                return data
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+        # Strategy 2: strip markdown fences (LLMs often wrap JSON in ```json ... ```)
+        clean = re.sub(r"```(?:json)?\s*|\s*```", "", text).strip()
+        try:
+            data = json.loads(clean)
+            if isinstance(data, dict):
+                return data
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+        # Strategy 3: find the outermost {...} block in either version using regex
+        # re.search handles embedded-in-prose JSON more reliably than str.find/rfind
         for candidate in (clean, text):
-            try:
-                data = json.loads(candidate)
-                if isinstance(data, dict):
-                    return data
-            except (json.JSONDecodeError, ValueError):
-                pass
-        # Extract outermost {...}
-        start, end = text.find("{"), text.rfind("}")
-        if start != -1 and end > start:
-            try:
-                return json.loads(text[start : end + 1])
-            except (json.JSONDecodeError, ValueError):
-                pass
+            m = re.search(r"\{[\s\S]*\}", candidate)
+            if m:
+                try:
+                    data = json.loads(m.group(0))
+                    if isinstance(data, dict):
+                        return data
+                except (json.JSONDecodeError, ValueError):
+                    pass
+
         return {}
 
     def _findings_from_json(self, items: list) -> list[ParsedFinding]:

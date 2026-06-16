@@ -69,12 +69,14 @@ class EarningsQualityAgent(BaseForensicAgent):
 
         self._generate_findings(result, eq_by_year, accrual_by_year, years, company_name)
 
-        context = self._retrieve_context(
+        rag_result = self._run_agentic_rag(
             company_name,
-            "non-GAAP adjusted EBITDA exceptional items one-time tax rate revenue recognition deferred"
+            "Earnings quality forensics: Sloan accrual decomposition, non-GAAP vs GAAP gap, "
+            "exceptional and one-time items inflating reported PAT, effective tax rate consistency, "
+            "and gross margin sustainability.",
+            financial_data,
         )
-        prompt = self._build_prompt(company_name, eq_by_year, accrual_by_year, years, context)
-        result.raw_analysis = self._analyze_with_llm(prompt, "equity_analyst")
+        result.raw_analysis = rag_result.raw_text
 
         result.summary = self._build_summary(company_name, eq_by_year, accrual_by_year, years, result)
         self._save_output(result, company_name)

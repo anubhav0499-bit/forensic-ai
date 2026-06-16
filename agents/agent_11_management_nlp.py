@@ -127,10 +127,19 @@ class ManagementNLPAgent(BaseForensicAgent):
                 )
                 findings.append(finding)
 
-        # ── LLM Deep Analysis ─────────────────────────────────
-        from llm.prompts import build_management_nlp_prompt
-        nlp_prompt = build_management_nlp_prompt(company_name, concall_text, mda_text)
-        raw_analysis = self._analyze_with_llm(nlp_prompt, "management_nlp", max_tokens=2048)
+        # ── Agentic RAG Synthesis ──────────────────────────────
+        rag_result = self._run_agentic_rag(
+            company_name,
+            (
+                f"Management NLP analysis: evasion_score={evasion_score:.2f}, "
+                f"non_gaap_emphasis={non_gaap_count} references. "
+                "Detect evasive and non-committal language, overconfidence signals, "
+                "guidance inaccuracy, narrative inconsistencies in MD&A and earnings calls, "
+                "and management override risk (ISA 240 §A4)."
+            ),
+            financial_data or {},
+        )
+        raw_analysis = rag_result.raw_text
         result.raw_analysis = raw_analysis
 
         # Parse LLM response for additional red flags

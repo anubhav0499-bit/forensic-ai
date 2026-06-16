@@ -51,12 +51,14 @@ class WorkingCapitalAgent(BaseForensicAgent):
 
         self._generate_findings(result, wc_by_year, years, company_name)
 
-        context = self._retrieve_context(
+        rag_result = self._run_agentic_rag(
             company_name,
-            "accounts receivable days sales outstanding inventory turnover payable days"
+            "Working capital forensics: DSO trends and channel stuffing signals, "
+            "inventory build-up and overstatement, DPO stretching under liquidity stress, "
+            "and cash conversion cycle deterioration.",
+            financial_data,
         )
-        prompt = self._build_prompt(company_name, wc_by_year, years, context)
-        result.raw_analysis = self._analyze_with_llm(prompt, "forensic_accountant")
+        result.raw_analysis = rag_result.raw_text
 
         result.summary = self._build_summary(company_name, wc_by_year, years, result)
         self._save_output(result, company_name)

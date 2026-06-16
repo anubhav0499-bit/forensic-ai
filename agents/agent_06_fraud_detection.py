@@ -177,20 +177,23 @@ class FraudDetectionAgent(BaseForensicAgent):
                     findings.append(finding)
                     result.red_flags.append(finding)
 
-        # ── LLM Deep Analysis ─────────────────────────────────
-        context = self._retrieve_context(company_name, "fraud manipulation accounting irregularities restatement")
+        # ── Agentic RAG Synthesis ──────────────────────────────
         m_score_val = latest_scores.get("beneish_m_score", -2.5)
         z_score_val = latest_scores.get("altman_z_score", 3.0)
         p_score_val = latest_scores.get("piotroski_f_score", 5)
         accrual_val = latest_scores.get("accrual_ratio", 0.0)
-
-        from llm.prompts import build_fraud_detection_prompt
-        fraud_prompt = build_fraud_detection_prompt(company_name, m_score_val, z_score_val, p_score_val, accrual_val)
-        if context:
-            fraud_prompt += f"\n\nDOCUMENT EVIDENCE:\n{context}"
-
-        raw_analysis = self._analyze_with_llm(fraud_prompt, "fraud_investigator")
-        result.raw_analysis = raw_analysis
+        quant_scores_summary = (
+            f"Beneish M-Score={m_score_val:.3f} ({'MANIPULATOR FLAG' if m_score_val > -1.78 else 'clean'}), "
+            f"Altman Z={z_score_val:.3f}, Piotroski F={p_score_val}/9, Accrual Ratio={accrual_val:.3f}."
+        )
+        rag_result = self._run_agentic_rag(
+            company_name,
+            f"Fraud detection synthesis: {quant_scores_summary} "
+            "Investigate accounting manipulation, earnings management, balance sheet fraud, "
+            "restatements, and patterns consistent with Beneish M-Score manipulation flags.",
+            financial_data,
+        )
+        result.raw_analysis = rag_result.raw_text
 
         # ── Overall Fraud Risk Score ───────────────────────────
         result.risk_score = self._calculate_fraud_risk_score(latest_scores)

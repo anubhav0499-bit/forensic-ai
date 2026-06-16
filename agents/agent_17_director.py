@@ -113,7 +113,18 @@ class ChiefInvestigationDirector(BaseForensicAgent):
             devil_advocate=devil_summary,
             financial_data=financial_data,
         )
-        final_analysis = self._analyze_with_llm(synthesis_prompt, "investment_director", max_tokens=4096)
+        try:
+            from llm.langchain_client import lc_invoke
+            final_analysis = lc_invoke(
+                synthesis_prompt,
+                system=(
+                    "You are the Chief Investment Officer of an institutional forensic research firm. "
+                    "Synthesize all investigation findings into a definitive, actionable verdict."
+                ),
+                fast=False,
+            )
+        except Exception:
+            final_analysis = self._analyze_with_llm(synthesis_prompt, "investment_director", max_tokens=4096)
         result.raw_analysis = final_analysis
 
         # ── Compile Director Findings ──────────────────────────

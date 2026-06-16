@@ -287,15 +287,19 @@ class RelatedPartyAgent(BaseForensicAgent):
             nw = d0.get("shareholder_equity", 1) or 1
             promoter_loan_ratio_latest = safe_divide(pl, nw)
 
-        quant_flags = [f.title for f in result.red_flags[:6]]
-        prompt = build_rpt_prompt(
-            company=company_name,
-            rpt_revenue_share=rpt_revenue_share,
-            promoter_loan_ratio=promoter_loan_ratio_latest,
-            disclosure_context=context,
-            quantitative_flags=quant_flags,
+        quant_flags_str = "; ".join(f.title for f in result.red_flags[:6]) or "none"
+        rag_result = self._run_agentic_rag(
+            company_name,
+            (
+                f"Related party transaction forensics. "
+                f"RPT revenue share={rpt_revenue_share*100:.1f}%, "
+                f"promoter loan ratio={promoter_loan_ratio_latest*100:.1f}%. "
+                f"Red flags: {quant_flags_str}. "
+                "Apply SEBI RPT Regulations 2021 materiality thresholds and OECD Principle VI.C tunnelling detection."
+            ),
+            financial_data,
         )
-        result.raw_analysis = self._analyze_with_llm(prompt, "governance_specialist", max_tokens=2048)
+        result.raw_analysis = rag_result.raw_text
 
         # ── Scoring ───────────────────────────────────────────────
         base = sum(scores) / len(scores) if scores else 38.0

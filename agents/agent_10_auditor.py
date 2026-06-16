@@ -70,9 +70,26 @@ class AuditorIntelligenceAgent(BaseForensicAgent):
         if financial_data and len(years) >= 2:
             self._analyze_auditor_history(result, financial_data, years)
 
-        # ── LLM deep analysis ─────────────────────────────────────
-        prompt = self._build_prompt(company_name, signals, combined_context, latest_year)
-        result.raw_analysis = self._analyze_with_llm(prompt, "auditor_intelligence")
+        # ── Agentic RAG Synthesis ──────────────────────────────────
+        active_signals = ", ".join(
+            k for k, v in {
+                "going_concern": signals["going_concern_flag"],
+                "material_weakness": signals["material_weakness"],
+                "restatement": signals["restatement_flag"],
+                "qualified_opinion": signals["qualified_opinion"],
+                "non_big4_auditor": not signals["is_big_four"],
+            }.items() if v
+        ) or "no critical audit flags"
+        rag_result = self._run_agentic_rag(
+            company_name,
+            f"Auditor intelligence: {signals['auditor_name']} "
+            f"(Big 4: {signals['is_big_four']}, KAMs: {signals['kam_count']}). "
+            f"Active signals: {active_signals}. "
+            "Investigate auditor independence, non-audit fee ratios (PCAOB Rule 3521), "
+            "key audit matters, going concern language, and internal control weaknesses.",
+            financial_data or {},
+        )
+        result.raw_analysis = rag_result.raw_text
 
         result.summary = self._build_summary(company_name, signals, result, latest_year)
         self._save_output(result, company_name)
