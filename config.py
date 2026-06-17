@@ -438,6 +438,62 @@ FRAUD_CASE_DATABASE = {
         ],
         "m_score": -1.1,
     },
+    "worldcom": {
+        "company": "WorldCom Inc",
+        "year": 2002,
+        "fraud_type": "Opex Capitalisation as Capex",
+        "key_signals": [
+            "$3.8B operating expenses capitalised as capital expenditure",
+            "Capex growing faster than revenue with no capacity explanation",
+            "OCF/EBITDA ratio very low — capitalised expenses inflate EBITDA",
+            "Asset turnover declining despite stable capex narrative",
+            "Internal audit team discovered scheme (Cynthia Cooper)",
+            "Auditor (Arthur Andersen) failed to independently test capitalised items",
+        ],
+        "m_score": -0.9,
+    },
+    "ilfs": {
+        "company": "Infrastructure Leasing & Financial Services",
+        "year": 2018,
+        "fraud_type": "Round-Tripping, Leverage Concealment via SPVs",
+        "key_signals": [
+            "Rs 91,000 crore debt hidden across 250+ group entities",
+            "Intra-group loans recycled to show repayment capacity",
+            "Holdco appeared AAA while SPVs held all stress — sudden rating cliff",
+            "SPV structure kept consolidated leverage off reported balance sheet",
+            "Auditors assessed holdco only; subsidiary SPVs not examined",
+            "SFIO investigation; NCLAT-appointed new board",
+        ],
+        "m_score": -1.0,
+    },
+    "dhfl": {
+        "company": "Dewan Housing Finance Corporation",
+        "year": 2019,
+        "fraud_type": "Fictitious Housing Loans, Shell Company Diversion",
+        "key_signals": [
+            "Rs 31,000 crore diverted via shell companies in small rural clusters",
+            "Fictitious borrowers geographically scattered to impede field verification",
+            "Spread between borrowing and lending rate compressed despite stated growth",
+            "Coralline Capital investigative report identified structure pre-collapse",
+            "Loan book verification not independently sampled by geography",
+            "NCLT resolution; criminal prosecution of Wadhawan family",
+        ],
+        "m_score": -0.8,
+    },
+    "yes_bank": {
+        "company": "Yes Bank",
+        "year": 2020,
+        "fraud_type": "NPA Suppression, Quid-Pro-Quo Lending, Evergreening",
+        "key_signals": [
+            "RBI divergence report: actual GNPA 100%+ above disclosed figure",
+            "Stressed sector concentration: IL&FS, DHFL, Cox & Kings exposures",
+            "Loans to distressed entities in exchange for alleged kickbacks",
+            "Evergreening at maturity to avoid NPA classification",
+            "Provision coverage ratio declining while NPA worsened",
+            "RBI imposed moratorium; SBI-led consortium rescue",
+        ],
+        "m_score": -1.2,
+    },
 }
 
 # ─────────────────────────────────────────────

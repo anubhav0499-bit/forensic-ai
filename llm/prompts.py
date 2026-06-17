@@ -5,6 +5,8 @@ Frameworks: ISA 240, PCAOB AS 2401/2101, COSO Internal Control Framework,
             Beneish (1999) M-Score, Dechow et al. (2011) F-Score, Altman EM Z-Score.
 """
 
+from __future__ import annotations
+
 SYSTEM_PROMPTS = {
     "forensic_accountant": """You are a senior forensic accountant with 20+ years of experience at Big Four firms, applying ISA 240 (Auditor's Responsibilities Relating to Fraud) and PCAOB AS 2401.
 Your mandate is to uncover accounting manipulation, fraud indicators, and earnings quality issues.
@@ -87,6 +89,17 @@ Risk-adjust the recommendation. This memo goes to the portfolio manager.""",
 }
 
 
+def get_knowledge_context(agent_id: int) -> str:
+    """Return the agent-specific knowledge block (standards + historical cases)."""
+    try:
+        from knowledge import get_agent_knowledge_block, get_reasoning_preamble
+        preamble = get_reasoning_preamble()
+        agent_block = get_agent_knowledge_block(agent_id)
+        return f"{preamble}\n\n{agent_block}" if agent_block else preamble
+    except ImportError:
+        return ""
+
+
 def build_analysis_prompt(
     agent_role: str,
     company_name: str,
@@ -96,6 +109,7 @@ def build_analysis_prompt(
     question: str = "",
     additional_context: str = "",
     structured_output: bool = True,
+    knowledge_context: str = "",
 ) -> str:
     """
     Build a structured forensic analysis prompt.
@@ -124,6 +138,8 @@ def build_analysis_prompt(
 Company: {company_name}
 Fiscal Years: {years_str}
 Analyst Role: {agent_role}
+
+{f"KNOWLEDGE FRAMEWORK:{chr(10)}{knowledge_context}" if knowledge_context else ""}
 
 FINANCIAL DATA:
 {_format_financial_data(financial_data)}

@@ -10,7 +10,7 @@ from typing import Optional
 from loguru import logger
 
 from llm.llm_manager import LLMManager
-from llm.prompts import SYSTEM_PROMPTS
+from llm.prompts import SYSTEM_PROMPTS, get_knowledge_context
 from llm.context_builder import ContextBuilder
 from llm.output_harness import OutputHarness, HarnessResult
 from rag.hybrid_retriever import HybridRetriever
@@ -150,7 +150,11 @@ class BaseForensicAgent(ABC):
         Use this instead of _analyze_with_llm() when you want structured
         findings (ParsedFinding list) and a numeric risk score extracted
         automatically from the LLM output.
+        Prepends agent-specific knowledge context (standards + historical cases).
         """
+        knowledge = get_knowledge_context(self.agent_id)
+        if knowledge:
+            prompt = f"{knowledge}\n\n{prompt}"
         system_prompt = SYSTEM_PROMPTS.get(system_role, SYSTEM_PROMPTS["forensic_accountant"])
         if HARNESS_CONFIG.request_structured_output:
             prompt = prompt + self._harness.structured_output_suffix()
