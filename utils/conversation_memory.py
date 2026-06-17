@@ -1,5 +1,33 @@
 """
-Conversation Memory — Session-based history with SQLite persistence.
+Conversation Memory — Session-based history with SQLite persistence
+====================================================================
+
+References
+----------
+Shinn, N., et al. (2023). "Reflexion: Language Agents with Verbal
+    Reinforcement Learning." NeurIPS 2023.
+    Motivates session-level memory: agent performance improves when
+    prior reasoning is available as in-context history.
+
+Park, J. S., et al. (2023). "Generative Agents: Interactive Simulacra
+    of Human Behavior." UIST 2023. Architecture inspiration for
+    compressed memory summaries vs. full transcript injection.
+
+Session ID Strategy
+--------------------
+make_session_id(company)      — MD5({company}_{YYYYMMDD}): one per day.
+make_run_session_id(company)  — MD5({company}_{YYYYMMDD}_{uuid4}): unique per run.
+
+SQLite Schema
+-------------
+Table: conversation_memory
+  id, session_id, company, agent_id, role, content, metadata, created_at
+  Per-turn content is capped at MAX_CONTENT_CHARS=800 on insert to bound
+  context window consumption per history entry.
+
+build_history_context() returns formatted "PRIOR ANALYSIS HISTORY" block
+ready for LLM prompt injection; maximum N turns configurable.
+
 Tracks multi-turn query-answer pairs per (session_id, company_name, agent_id)
 and provides a formatted history block for LLM prompt injection.
 """

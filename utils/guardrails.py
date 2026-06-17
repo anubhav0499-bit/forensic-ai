@@ -1,5 +1,44 @@
 """
-Guardrails — Groundedness checking, faithfulness scoring, hallucination detection.
+Guardrails — Groundedness checking, faithfulness scoring, hallucination detection
+==================================================================================
+
+References
+----------
+Min, S., et al. (2023). "FActScoring: Fine-grained Atomic Evaluation
+    of Factual Precision in Long-Form Text Generation." EMNLP 2023.
+    Basis for per-claim groundedness scoring via token-overlap proxy.
+
+Honovich, O., et al. (2022). "TRUE: Re-evaluating Factual Consistency
+    Evaluation." NAACL 2022. Demonstrates NLI-based faithfulness scoring
+    as a low-cost hallucination detector without a reference model.
+
+Nakano, R., et al. (2021). "WebGPT: Browser-assisted Question-answering
+    with Human Feedback." arXiv:2112.09332.
+    Grounding-score concept: proportion of answer claims verifiable
+    from source context.
+
+Three-Layer Guardrail Architecture
+------------------------------------
+Layer 1 — Groundedness (token overlap ≥ 0.20):
+    Measures what fraction of answer tokens appear in source context.
+    Threshold 0.20 catches obvious hallucination; block_on_fail=False
+    by default (attach warning rather than reject).
+
+Layer 2 — Standard validation (ISA / SA / IAS / PCAOB number check):
+    Regex catches cited standard codes; validates against _VALID_STDS
+    frozenset (60+ valid numbers). Invented standard codes flagged as
+    HALLUCINATION_RISK.
+
+Layer 3 — Overconfidence detection:
+    Keyword scan for "definitely", "certainly", "guaranteed", "no doubt",
+    "100% certain" etc. Flags overconfident language in forensic context.
+
+Risk classification:
+    CRITICAL → groundedness < 0.10 or ≥ 3 issues
+    HIGH     → groundedness < 0.20 or ≥ 2 issues
+    MEDIUM   → groundedness < 0.35 or ≥ 1 issue
+    LOW      → within normal bounds
+
 Three-layer active guardrail system for forensic AI outputs.
 """
 

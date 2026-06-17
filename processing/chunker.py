@@ -1,10 +1,37 @@
 """
-Document Chunker - Semantic, recursive, and table-aware chunking for RAG pipeline.
+Document Chunker — Section-aware, recursive, and semantic chunking for RAG
+===========================================================================
 
-Modes:
-  DocumentChunker          — section-aware, sentence-boundary-snapped (original)
-  RecursiveChunker         — hierarchical parent→child splitting for dense passages
-  SemanticChunker          — embedding-similarity-guided splits (requires embedder)
+References
+----------
+Recursive Chunking
+~~~~~~~~~~~~~~~~~~
+LangChain RecursiveCharacterTextSplitter — design inspiration.
+    Separator hierarchy: paragraph → line → sentence → word.
+    Chase, H. (2022). LangChain: Building applications with LLMs through
+    composability. GitHub: hwchase17/langchain.
+
+Semantic Chunking
+~~~~~~~~~~~~~~~~~
+LangChain SemanticChunker (Greg Kamradt, 2023) — percentile threshold
+    approach for detecting topic-shift boundaries via embedding similarity.
+
+Kamradt, G. (2023). "5 Levels of Text Splitting." Notebook:
+    github.com/FullStackRetrieval-com/RetrievalTutorials.
+    Demonstrates sentence-level cosine similarity for split detection.
+
+Sbert Similarity
+~~~~~~~~~~~~~~~~
+Reimers, N., & Gurevych, I. (2019). "Sentence-BERT."
+    Cosine similarity on normalised sentence embeddings to detect
+    topic boundaries (threshold=0.75 default in SemanticChunker).
+
+Chunking Modes
+--------------
+DocumentChunker:   section-aware + sentence-boundary snapping (original)
+RecursiveChunker:  hierarchical parent→child; parent_id in metadata
+SemanticChunker:   embedding-similarity split; falls back to Recursive
+                   if embedder unavailable
 """
 
 from __future__ import annotations

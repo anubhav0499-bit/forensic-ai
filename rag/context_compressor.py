@@ -1,5 +1,31 @@
 """
-Context Compressor — LLM-based extractive compression and redundancy removal.
+Context Compressor — LLM-based extractive compression and redundancy removal
+=============================================================================
+
+References
+----------
+Izacard, G., et al. (2022). "Few-shot Learning with Retrieval Augmented
+    Language Models." arXiv:2208.03299. (FiD-Light basis for extractive
+    compression: retain only query-relevant sentences from retrieved passages)
+
+Ma, X., et al. (2023). "Query Rewriting for Retrieval-Augmented Large
+    Language Models." arXiv:2305.14283. Demonstrates that LLM-based
+    context filtering (keeping only relevant sentences) improves faithfulness
+    scores by ~8 F1 points over no-compression baselines.
+
+LangChain ContextualCompressionRetriever — design inspiration for
+    chaining retrieval and compression in a single pipeline step.
+
+Compression Strategies
+----------------------
+LLM path:     prompt-based extractive ("Extract ONLY sentences relevant to
+              {query}; respond SKIP if none"). Requires active LLM.
+Keyword path: TF-overlap scoring; keep top compression_ratio sentences
+              by query-keyword overlap (no LLM required — always available).
+
+Context header format: "[Source N: {doc}, FY{year}, § {section}]"
+    Headers are preserved as provenance anchors through compression.
+
 Reduces retrieved context to only the snippets most relevant to the query,
 improving answer quality while making room for more source diversity.
 """

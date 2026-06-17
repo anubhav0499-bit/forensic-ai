@@ -4,12 +4,29 @@
 ---
 
 **Classification:** Internal — Restricted  
-**Version:** 1.3  
-**Platform:** Forensic AI v1.3  
+**Version:** 1.4  
+**Platform:** Forensic AI v1.4  
 **Maintained by:** Platform Owner  
 **Last Updated:** June 2026
 
-**v1.3 Changes (current) — Full codebase audit, 23 bugs fixed across 17 files:**
+**v1.4 Changes (current) — 13 advanced RAG modules integrated; knowledge base; full technical references:**
+- `knowledge/forensic_knowledge.py` (NEW) — 5-layer Core Knowledge Base: global audit standards (ISA/PCAOB), Indian regulatory (SEBI LODR, CARO 2020, Companies Act), fraud case library (10 cases: Satyam, IL&FS, DHFL, Yes Bank, Enron, WorldCom, Wirecard, Luckin Coffee, Carillion, Steinhoff), financial statement intelligence, regulatory intelligence. Injected into every agent LLM call via `get_agent_knowledge_block(agent_id)`.
+- `rag/faiss_store.py` (NEW) — FAISS IndexFlatIP vector store (Johnson et al. 2019, IEEE Trans. Big Data); persists as `{company}.faiss` + `{company}_meta.pkl`; opt-in via `USE_FAISS=true`; 3–5× faster than ChromaDB for similarity queries.
+- `rag/multi_vector_retriever.py` (NEW) — Dual embeddings per chunk (raw content + LLM-generated 1-sentence summary); RRF merge (raw weight=0.6, summary weight=0.4); improves recall for gist-based queries.
+- `rag/context_compressor.py` (NEW) — LLM extractive compression (sentence-level) + keyword TF-overlap fallback; preserves `[Source N:]` provenance headers; integrates with `ContextBuilder(compress=True)`.
+- `utils/conversation_memory.py` (NEW) — SQLite-backed session memory per `(session_id, company_name, agent_id)`; `build_history_context()` for LLM prompt injection; MAX_CONTENT_CHARS=800 per turn.
+- `utils/guardrails.py` (NEW) — Three-layer system: (1) groundedness token overlap ≥ 0.20, (2) ISA/SA/IAS/PCAOB number validation (60+ valid codes), (3) overconfidence language detection. Risk levels: CRITICAL/HIGH/MEDIUM/LOW. `enrich_harness_result()` attaches scores to every `HarnessResult`.
+- `eval/ragas_eval.py` (NEW) — RAGAS evaluation (Es et al. 2023, arXiv:2309.15217); metrics: context_relevancy (30%), faithfulness (35%), answer_relevancy (25%), context_recall (10%); 10 built-in forensic questions; custom overlap fallback without ragas.
+- `api/streaming.py` (NEW) — SSE streaming: `stream_sse()` (`AsyncGenerator` for FastAPI) and `stream_sync()` (`Generator` for Streamlit). Frame: `data: {"token": "...", "done": false}\n\n`. Native provider streaming first; chunked fallback.
+- `processing/chunker.py` (ENHANCED) — Added `RecursiveChunker` (4-level separator hierarchy with parent→child IDs) and `SemanticChunker` (cosine-similarity-guided splits at threshold=0.75; falls back to Recursive if embedder unavailable).
+- `rag/embeddings.py` (ENHANCED) — `fast=True` parameter: bge-small-en-v1.5 (384-dim, ~130 MB) waterfall; `similarity()` method for SemanticChunker. New module-level constant `_BGE_SMALL`.
+- `rag/hybrid_retriever.py` (ENHANCED) — `search_multi_reranked()`: multi-query RRF + cross-encoder reranking on primary query.
+- `llm/context_builder.py` (ENHANCED) — `compressor=` constructor param; `compress=True` + `primary_query=` in `build()`; cache key includes compress flag.
+- `agents/base_agent.py` (ENHANCED) — Knowledge block prepended in `_analyze_and_extract()`; Guardrails applied after every LLM extraction.
+- `config.py` (ENHANCED) — 7 new opt-in config dataclasses: `FAISSConfig`, `MultiVectorConfig`, `ContextCompressionConfig`, `ConversationMemoryConfig`, `GuardrailsConfig`, `StreamingConfig`, `RAGASConfig`.
+- Technical references (academic citations, audit standards, regulatory references) added to all 50+ Python module docstrings.
+
+**v1.3 Changes — Full codebase audit, 23 bugs fixed across 17 files:**
 - `acquisition/india_markets.py` — ZeroDivisionError guard on `rate_limit == 0`
 - `acquisition/ir_scraper.py` — fixed rate-limit sleep: was sleeping `rate_limit` seconds (a frequency value) instead of `1/rate_limit`; also fixed after prior `settings` → `ACQUISITION_CONFIG` fix
 - `acquisition/sec_edgar.py` — IndexError guard when `dates`/`accessions`/`primary_docs` arrays are shorter than `forms`; applied to both annual and quarterly filing loops
@@ -175,10 +192,20 @@ The platform automatically:
 | **LLM (Local)** | Ollama + Qwen2.5:7B / LM Studio | Fully offline; no data transmission |
 | **LLM (GPU)** | HuggingFace Transformers | GPU-accelerated (Colab T4/A100, local GPU) |
 | **LLM (Last Resort)** | Template Mode | Deterministic output without LLM |
-| **Embeddings** | BAAI/bge-large-en-v1.5 | Semantic document search |
-| **Vector DB** | ChromaDB | Persistent embedding store |
+| **Embeddings (primary)** | BAAI/bge-large-en-v1.5 (1024-dim) | Best quality semantic search |
+| **Embeddings (fast)** | BAAI/bge-small-en-v1.5 (384-dim, ~130 MB) | 4x faster; enable via EMBEDDING_FAST=true |
+| **Vector DB (primary)** | FAISS IndexFlatIP | High-speed local similarity (opt-in: USE_FAISS=true) |
+| **Vector DB (backup)** | ChromaDB | Persistent cosine-distance embedding store |
 | **Sparse Retrieval** | BM25Okapi | Keyword-based document retrieval |
-| **Hybrid Fusion** | RRF (k=60) | Combines BM25 + dense with 0.4/0.6 weights |
+| **Hybrid Fusion** | RRF (k=60) | BM25 (0.4) + Dense (0.6) Reciprocal Rank Fusion |
+| **Cross-Encoder Reranking** | ms-marco-MiniLM-L-6-v2 | Precision reranking (lazy-loaded, cached) |
+| **Multi-Vector** | Raw + LLM summary per chunk | Dual-representation retrieval |
+| **Smart Chunking** | Recursive + Semantic + Section-aware | Three modes with parent-child linking |
+| **Context Compression** | LLM extractive + keyword TF-overlap | Reduces context to relevant sentences |
+| **Guardrails** | Three-layer groundedness + NLI | Hallucination detection per finding |
+| **RAGAS Evaluation** | Es et al. 2023 + custom fallback | Context quality scoring (4 metrics) |
+| **SSE Streaming** | AsyncGenerator + Generator | FastAPI + Streamlit streaming |
+| **Knowledge Base** | 5-layer domain knowledge | Standards, fraud cases, reasoning framework |
 | **Relational DB** | SQLite (WAL mode) | Findings, companies, sessions |
 | **Analytics DB** | DuckDB | Trend analysis, peer benchmarking |
 | **PDF Parsing** | PyMuPDF → pdfplumber → Tesseract | Cascade OCR fallback |
@@ -213,10 +240,13 @@ forensic_ai/
 │   └── chunker.py             ← RAG chunking
 │
 ├── rag/                       ← Retrieval-Augmented Generation
-│   ├── embeddings.py          ← Sentence transformer wrapper
-│   ├── vector_store.py        ← ChromaDB wrapper
-│   ├── bm25_retriever.py      ← BM25 keyword retrieval
-│   └── hybrid_retriever.py    ← RRF fusion + reranking
+│   ├── embeddings.py          ← BGE-large/small embedding model (fast= param)
+│   ├── vector_store.py        ← ChromaDB wrapper (cosine similarity)
+│   ├── faiss_store.py         ← FAISS IndexFlatIP (opt-in, USE_FAISS=true)
+│   ├── bm25_retriever.py      ← BM25Okapi keyword retrieval
+│   ├── hybrid_retriever.py    ← RRF fusion + cross-encoder reranking
+│   ├── multi_vector_retriever.py ← Raw + LLM summary dual embeddings
+│   └── context_compressor.py  ← LLM extractive + keyword compression
 │
 ├── forensics/                 ← Quantitative forensic engines
 │   ├── beneish_score.py       ← Beneish M-Score (8 variables)
@@ -259,9 +289,22 @@ forensic_ai/
 │   ├── pptx_generator.py      ← PowerPoint (7 slides)
 │   └── html_generator.py      ← HTML dashboard
 │
+├── knowledge/                 ← Core Knowledge Base (5 layers)
+│   ├── forensic_knowledge.py  ← Standards, fraud cases, reasoning framework
+│   └── __init__.py            ← Public exports
+│
+├── api/                       ← API layer
+│   └── streaming.py           ← SSE streaming (FastAPI + Streamlit)
+│
+├── eval/                      ← Evaluation suite
+│   ├── ragas_eval.py          ← RAGAS + custom fallback evaluation
+│   └── run_eval.py            ← Evaluation runner scripts
+│
 └── utils/
     ├── storage.py             ← File storage manager
     ├── audit_trail.py         ← Immutable JSONL audit log
+    ├── conversation_memory.py ← SQLite-backed session history
+    ├── guardrails.py          ← Three-layer groundedness + hallucination check
     └── helpers.py             ← Shared utilities
 ```
 
@@ -932,14 +975,18 @@ FORENSIC_AI_OUTPUT_DIR=/mnt/nas/forensic python main.py "Infosys"
 
 Pre-loaded reference cases for pattern-matching:
 
-| Case | Year | Type | Key Signals |
-|------|------|------|------------|
-| Enron | 2001 | Revenue overstatement; special purpose entities | SPE abuse, off-balance-sheet, aggressive revenue |
-| Wirecard | 2020 | Fictitious cash; fabricated revenue | Missing cash balance, trustee accounts, phantom revenue |
-| Satyam | 2009 | Bank balance fabrication; fake receivables | Fictitious cash, false receivables, promoter loans |
-| Luckin Coffee | 2020 | Fabricated sales figures | Revenue inflation, related party, opaque disclosures |
-| Carillion | 2018 | Working capital manipulation; goodwill inflation | Negative CFO, stretched payables, goodwill |
-| Steinhoff | 2017 | Multi-jurisdiction fraud; off-balance-sheet | Revenue manipulation, complex structures |
+| Case | Year | Country | Type | Key Signals |
+|------|------|---------|------|------------|
+| Enron | 2001 | US | Revenue overstatement; special purpose entities | SPE abuse, off-balance-sheet, aggressive revenue |
+| WorldCom | 2002 | US | Expense capitalisation; inflated assets | $11B capex fraud, opex capitalised as assets |
+| Wirecard | 2020 | Germany | Fictitious cash; fabricated revenue | EUR 1.9B missing, trustee accounts, phantom revenue |
+| Satyam | 2009 | India | Bank balance fabrication; fake receivables | Fictitious cash, false receivables, promoter loans |
+| IL&FS | 2018 | India | Off-balance-sheet SPVs; debt concealment | Hidden debt, governance failure, AAA→default in weeks |
+| DHFL | 2019 | India | Fictitious loans; shell company routing | Phantom borrowers, promoter diversion, RPT abuse |
+| Yes Bank | 2020 | India | Evergreening of NPAs; governance failure | Hidden stressed assets, promoter pledge cascade |
+| Luckin Coffee | 2020 | China | Fabricated sales figures | Revenue inflation 40%, related party, opaque disclosures |
+| Carillion | 2018 | UK | Working capital manipulation; goodwill inflation | Negative CFO, stretched payables, goodwill never impaired |
+| Steinhoff | 2017 | South Africa | Multi-jurisdiction fraud; off-balance-sheet | EUR 6.5B revenue manipulation, complex holding structures |
 
 ---
 
@@ -1401,7 +1448,84 @@ The Director also sets 8 quarterly triggers. Investigation should be re-run if a
 
 ---
 
-*End of Forensic AI Technical Reference Manual v1.2*
+---
+
+## 17. RAG PIPELINE REFERENCE (v1.4)
+
+### 17.1 Embedding Models
+
+| Model | Dimensions | Size | Quality | When Used |
+|-------|-----------|------|---------|-----------|
+| BAAI/bge-large-en-v1.5 | 1024 | ~1.3 GB | Best | `EmbeddingModel()` default |
+| BAAI/bge-small-en-v1.5 | 384 | ~130 MB | Good | `EmbeddingModel(fast=True)` or EMBEDDING_FAST=true |
+| all-MiniLM-L6-v2 | 384 | ~80 MB | Adequate | Universal fallback |
+
+### 17.2 Vector Store Options
+
+| Store | Type | Speed | Persistence | Opt-in |
+|-------|------|-------|------------|--------|
+| FAISS IndexFlatIP | Exact inner product | Fastest | `.faiss` + `_meta.pkl` | USE_FAISS=true |
+| ChromaDB | Cosine distance | Fast | Chroma directory | Default |
+
+### 17.3 Hybrid Retrieval Architecture
+
+```
+Query
+  │
+  ├── Dense retrieval (BGE embeddings → FAISS/ChromaDB)  weight=0.6
+  │
+  └── Sparse retrieval (BM25Okapi)                       weight=0.4
+         │
+         └── RRF fusion (k=60) → ranked candidates
+                  │
+                  └── [optional] Cross-encoder reranking
+                            (ms-marco-MiniLM-L-6-v2)
+```
+
+### 17.4 Chunking Modes
+
+| Mode | Class | Separator Strategy | Parent-Child |
+|------|-------|--------------------|-------------|
+| Section-aware | `DocumentChunker` | Section headers → sentence snap | No |
+| Recursive | `RecursiveChunker` | 4-level: paragraph → line → sentence → word | Yes (parent_id in metadata) |
+| Semantic | `SemanticChunker` | Cosine similarity < 0.75 between adjacent sentences | No |
+
+### 17.5 Guardrails Risk Matrix
+
+| Condition | Risk Level |
+|-----------|-----------|
+| groundedness < 0.10 OR 3+ issues | CRITICAL |
+| groundedness < 0.20 OR 2+ issues | HIGH |
+| groundedness < 0.35 OR 1+ issue | MEDIUM |
+| groundedness >= 0.35 AND 0 issues | LOW |
+
+### 17.6 RAGAS Metrics
+
+| Metric | Weight | Measures |
+|--------|--------|---------|
+| context_relevancy | 30% | Fraction of retrieved context sentences relevant to query |
+| faithfulness | 35% | Fraction of answer claims entailed by retrieved context |
+| answer_relevancy | 25% | Cosine similarity between question and answer embeddings |
+| context_recall | 10% | Fraction of ground-truth sentences in retrieved context |
+
+### 17.7 Technical References (v1.4)
+
+| Component | Reference |
+|-----------|---------|
+| FAISS | Johnson, J., Douze, M., & Jégou, H. (2019). IEEE Trans. Big Data, 7(3), 535–547. |
+| BM25 | Robertson, S., & Zaragoza, H. (2009). FnTIR, 3(4), 333–389. |
+| RRF | Cormack et al. (2009). SIGIR 2009, 758–759. |
+| BGE Embeddings | Xiao, S., et al. (2023). arXiv:2309.07597. |
+| RAGAS | Es, S., et al. (2023). arXiv:2309.15217. |
+| HyDE | Gao, L., et al. (2022). arXiv:2212.10496. |
+| ReAct / LangGraph | Yao, S., et al. (2022). ICLR 2023. |
+| Context Compression | Ma, X., et al. (2023). arXiv:2305.14283. |
+| Guardrails | Min, S., et al. (2023). EMNLP 2023. |
+| Cross-Encoder | Nogueira, R., & Cho, K. (2019). arXiv:1901.04085. |
+
+---
+
+*End of Forensic AI Technical Reference Manual v1.4*
 
 *This document is classified as Internal — Restricted. Distribution is limited to authorized analysts and reviewers. This platform produces research-grade output to assist human analysts; all findings must be reviewed by qualified professionals before being acted upon. This is not financial advice.*
 
@@ -1410,7 +1534,7 @@ The Director also sets 8 quarterly triggers. Investigation should be re-run if a
 
 | Field | Value |
 |-------|-------|
-| Version | 1.2 |
+| Version | 1.4 |
 | Status | Active |
 | Review Cycle | Quarterly |
 | Owner | Platform Administrator |

@@ -1,5 +1,36 @@
 """
-RAGAS Evaluation Suite — Context relevance, faithfulness, answer relevance scoring.
+RAGAS Evaluation Suite — Context relevance, faithfulness, answer relevance scoring
+===================================================================================
+
+References
+----------
+Es, S., James, J., Espinosa-Anke, L., & Schockaert, S. (2023).
+    "RAGAS: Automated Evaluation of Retrieval Augmented Generation."
+    arXiv:2309.15217.
+    Metrics used:
+      context_relevancy  (weight 0.30) — fraction of retrieved context
+                          sentences that are relevant to the query.
+      faithfulness       (weight 0.35) — fraction of answer claims
+                          that are entailed by retrieved context.
+      answer_relevancy   (weight 0.25) — cosine similarity between
+                          question embedding and answer embedding.
+      context_recall     (weight 0.10) — fraction of ground-truth
+                          sentences recoverable from retrieved context.
+
+Liu, N. F., et al. (2023). "Lost in the Middle: How Language Models
+    Use Long Contexts." TACL 2024. Motivates faithfulness metric:
+    LLMs preferentially use context start/end, ignoring middle.
+
+Sanh, V., et al. (2019). "DistilBERT." arXiv:1910.01108.
+    NLI-based faithfulness fallback when ragas is not installed.
+
+Custom Fallback Metrics (when ragas not installed)
+---------------------------------------------------
+context_relevancy  — query keyword overlap with retrieved context.
+faithfulness       — answer keyword overlap with retrieved context.
+answer_relevancy   — answer length / quality heuristic.
+context_recall     — always 0.7 (cannot compute without ground truth).
+
 Uses the ragas library when available; falls back to custom overlap metrics otherwise.
 
 Run standalone:

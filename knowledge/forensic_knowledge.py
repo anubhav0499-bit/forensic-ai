@@ -1,6 +1,39 @@
 """
 Forensic AI — Core Knowledge Base
 ===================================
+
+References — Audit Standards
+------------------------------
+IAASB (2022). ISA 240: The Auditor's Responsibilities Relating to Fraud.
+IAASB (2022). ISA 315 (Revised 2019): Identifying and Assessing Risks of
+    Material Misstatement. ISA 540: Auditing Accounting Estimates.
+    ISA 570: Going Concern. ISA 600: Special Considerations — Group Audits.
+ICAI. SA 240, SA 315, SA 540, SA 570, SA 600 — Indian equivalents of ISA.
+PCAOB. AS 2401: Consideration of Fraud in a Financial Statement Audit.
+    AS 2101: Audit Planning. AS 2110: Identifying and Assessing Risks.
+SEBI. LODR Regulations 2015 (Reg. 33, 34, 46): Listed Entity Obligations
+    for Disclosure and Financial Reporting.
+MCA (2020). CARO 2020: Companies (Auditor's Report) Order — 21 reporting
+    requirements for statutory auditors of Indian companies.
+MCA (2013). Companies Act 2013 §§ 134, 143, 177: Board responsibility,
+    auditor duties, audit committee mandates.
+
+References — Forensic Academic Literature
+-------------------------------------------
+Beneish (1999); Dechow, Ge, Larson & Sloan (2011); Altman (1968, 2000);
+Piotroski (2000); Sloan (1996) — see individual module docstrings.
+Lev, B., & Thiagarajan, S. R. (1993). "Fundamental Information Analysis."
+    Journal of Accounting Research, 31(2), 190–215. (ratio analysis basis)
+Penman, S. H. (2012). Financial Statement Analysis and Security Valuation.
+    5th ed. McGraw-Hill. (evidence-first reasoning framework)
+
+References — Regulatory (Indian Market)
+-----------------------------------------
+SEBI SAST Regulations 2011: Substantial Acquisition and Takeovers
+    (promoter pledge thresholds, mandatory open offer triggers).
+RBI Circular 2018: Revised Framework for Resolution of Stressed Assets.
+Insolvency and Bankruptcy Code 2016: §7, §9 (financial/operational creditor).
+
 Single source of truth for:
   - Reasoning framework (Evidence → Conclusion 6-step chain)
   - Hallucination control protocol

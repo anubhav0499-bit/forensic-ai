@@ -1,5 +1,33 @@
 """
-Risk Scorer - Aggregate risk scoring across all forensic dimensions
+Risk Scorer — Aggregate risk scoring across all forensic dimensions
+====================================================================
+
+References
+----------
+Composite Risk Scoring Framework
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Dechow et al. (2011); Beneish (1999); Altman (1968, 2000) — individual
+model scores are weighted components of the composite 0–100 risk score.
+
+Lev, B., & Thiagarajan, S. R. (1993). "Fundamental Information Analysis."
+    Journal of Accounting Research, 31(2), 190–215.
+    Multi-dimensional financial health scoring inspiration.
+
+Score Weights (RISK_SCORE_WEIGHTS from config.py)
+--------------------------------------------------
+fraud_indicators      0.25  — Agent 6 (Beneish, Dechow, Piotroski, Altman)
+earnings_quality      0.20  — Agent 8 (accrual ratios, tax, margins)
+cash_flow_quality     0.20  — Agent 4 (FCF, CFO/NI, EBITDA conversion)
+governance            0.15  — Agents 9,10,11 (RPT, auditor, NLP)
+credit_risk           0.10  — Agent 7 (leverage, coverage, liquidity)
+auditor_risk          0.05  — Agent 10 (going concern, material weakness)
+management_credibility 0.05 — Agent 11 (evasion, non-GAAP overemphasis)
+
+Verdict Bands
+-------------
+0–24: BUY | 25–37: CAUTIOUS BUY | 38–49: MONITOR | 50–59: CAUTION
+60–74: AVOID | 75–100: STRONG AVOID
+
 Produces a 0-100 overall risk score with band classification.
 """
 

@@ -1,6 +1,34 @@
 """
 Cross-Validation Engine
 ========================
+
+References
+----------
+ISA 520 (IAASB): Analytical Procedures — mandatory use of analytical
+    procedures in the overall review stage; ratio comparison across
+    periods to identify unexpected fluctuations (§A5–A7).
+SA 520 (ICAI): Indian equivalent of ISA 520.
+PCAOB AS 2305: Substantive Analytical Procedures — guidance on
+    expectation-vs-actual comparisons as audit evidence.
+
+Dechow, P. M., & Skinner, D. J. (2000). "Earnings Management:
+    Reconciling the Views of Accounting Academics, Practitioners,
+    and Regulators." Accounting Horizons, 14(2), 235–250.
+    Discusses cross-statement inconsistencies as fraud indicators.
+
+The 10 Cross-Validation Rules
+--------------------------------
+1. REVENUE_CFO_DIVERGENCE    — Revenue CAGR 40%+ above CFO CAGR (3+ yrs)
+2. AR_REVENUE_DIVERGENCE     — AR growing 25%+ faster than revenue (1 yr)
+3. INVENTORY_COGS_DIVERGENCE — Inventory growing 30%+ faster than COGS
+4. RETAINED_EARNINGS_INCONSISTENCY — RE delta ≠ NI − Dividends by >25%
+5. POOR_EBITDA_CFO_CONVERSION — CFO/EBITDA < 0.40x in any year
+6. GROSS_MARGIN_JUMP         — Gross margin changes >7pp in one year
+7. TAX_RATE_ANOMALY          — ETR deviates >12pp from company average
+8. UNDERINVESTMENT           — CapEx/Depreciation < 0.40x
+9. DEBT_REVENUE_DIVERGENCE   — Debt CAGR 50%+ above revenue CAGR (3+ yrs)
+10. BALANCE_SHEET_IMBALANCE  — Assets ≠ Liabilities+Equity by >5%
+
 Checks internal consistency of financial statements across years.
 Catches errors and manipulation that pass individual model tests
 but fail when ratios are compared against each other.

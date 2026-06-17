@@ -1,5 +1,23 @@
 """
-Output Harness — Structured extraction from LLM free-text outputs.
+Output Harness — Structured extraction from LLM free-text outputs
+==================================================================
+
+References
+----------
+Wei, J., et al. (2022). "Chain-of-Thought Prompting Elicits Reasoning
+    in Large Language Models." NeurIPS 2022. Basis for structured JSON
+    output instruction appended to prompts (request_structured_output).
+
+Ouyang, L., et al. (2022). "Training Language Models to Follow
+    Instructions with Human Feedback (InstructGPT)." NeurIPS 2022.
+    Motivates structured output instructions as a reliability mechanism.
+
+JSON Extraction Strategy (3-tier cascade)
+------------------------------------------
+1. Raw parse:   try json.loads(raw_text) directly.
+2. Fence strip: extract content inside ```json ... ``` or ``` ... ``` blocks.
+3. Regex boundary: find first { and last } in text, parse that substring.
+Falls back to free-text extraction (regex + scored paragraph NLP) on failure.
 
 Provides:
   • Robust JSON extraction with three fallback strategies

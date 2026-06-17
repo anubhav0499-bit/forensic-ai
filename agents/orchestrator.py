@@ -1,10 +1,38 @@
 """
-Forensic Orchestrator — LangGraph-based multi-agent workflow
-=============================================================
+Forensic Orchestrator — 18-Agent Multi-Phase Workflow Controller
+=================================================================
+
+References
+----------
+Multi-Agent Orchestration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+LangChain (Chase, H., 2022). Multi-agent orchestration patterns:
+    parallel agent pools with ThreadPoolExecutor, phase gates, and
+    result aggregation.
+    github.com/langchain-ai/langchain
+
+Park, J. S., et al. (2023). "Generative Agents: Interactive Simulacra
+    of Human Behavior." UIST 2023. Multi-agent state sharing pattern:
+    later phases receive all prior phase outputs as context.
+
+Li, G., et al. (2023). "MetaGPT: Meta Programming for a Multi-Agent
+    Collaborative Framework." ICLR 2024. Structured agent roles with
+    sequential gating and result injection.
+
+Parallelism Strategy
+---------------------
+Phase B: ThreadPoolExecutor(max_workers=8) for cloud LLM backends.
+         Sequential fallback for local Ollama/LM Studio (no rate limits).
+Phase A → Phase B → Phase C → Phase D: strictly sequential (each phase
+receives the complete output of all prior phases).
+
+Phase Architecture
+-------------------
 Phase A: Agent 6 (Fraud Detection) — establishes forensic baseline
-Phase B: Agents 4,5,7,8,10,11 — parallel specialist agents (threaded)
-Phase C: Agents 3,9,12–16 — synthesis/LLM agents with full prior context
+Phase B: Agents 3,4,5,7,8,9,10,11 — parallel specialist agents (threaded)
+Phase C: Agents 12,14 — synthesis/LLM agents with full prior context
 Phase D: Agent 17 (Director) — iterative synthesis with refinement loop
+         (triggers extra "Resolve Ambiguity" pass if score in 38–62 range)
 """
 
 from __future__ import annotations

@@ -1,9 +1,25 @@
 """
-Context Builder — Multi-query RAG retrieval with deduplication, relevance
-scoring, token-budget-aware assembly, and optional LLM context compression.
+Context Builder — Multi-query RAG retrieval with deduplication, budget-aware
+assembly, and optional LLM context compression
+=============================================================================
 
-Pipeline:
-  retrieve → deduplicate → score-sort → assemble → [compress]
+References
+----------
+Ram, O., et al. (2023). "In-Context Retrieval-Augmented Language Models."
+    TACL 2023. Motivates multi-query retrieval and token-budget assembly
+    for long-context LLM prompts; deduplication reduces context noise.
+
+Liu, N. F., et al. (2023). "Lost in the Middle: How Language Models Use
+    Long Contexts." TACL 2024. Informs budget-first-best placement:
+    highest-relevance chunks placed first in the assembled context.
+
+Jaccard Deduplication
+----------------------
+Near-duplicate threshold: Jaccard ≥ 0.65 (token overlap).
+_tokenize() extracts [a-zA-Z0-9]{3,} tokens; union/intersection scored.
+Higher-scoring near-duplicate replaces lower; exact duplicates (hash) skipped.
+
+Pipeline: retrieve → deduplicate → score-sort → assemble → [compress]
 """
 
 from __future__ import annotations

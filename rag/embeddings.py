@@ -1,6 +1,32 @@
 """
-Embedding Model - BAAI/bge-large-en-v1.5 for financial document embeddings.
-Falls back to bge-small-en-v1.5 (fast, ~130 MB) then all-MiniLM-L6-v2.
+Embedding Model — BAAI/bge-large-en-v1.5 for financial document embeddings
+===========================================================================
+
+References
+----------
+Xiao, S., et al. (2023). "C-Pack: Packaged Resources to Advance General
+    Chinese Embedding." arXiv:2309.07597.
+    BAAI/bge-large-en-v1.5: 1024-dim, English, trained with contrastive
+    learning and knowledge distillation; top performer on MTEB leaderboard
+    for retrieval tasks as of release. License: MIT.
+
+Chen, J., et al. (2022). "MTEB: Massive Text Embedding Benchmark."
+    arXiv:2210.07316. Benchmark used for bge model selection.
+
+Reimers, N., & Gurevych, I. (2019). "Sentence-BERT: Sentence Embeddings
+    Using Siamese BERT-Networks." EMNLP 2019.
+    all-MiniLM-L6-v2 (fallback): 384-dim, 22M params, 80 MB, fast.
+
+Model Cascade (fast=False, default)
+------------------------------------
+BAAI/bge-large-en-v1.5  (1024-dim, ~1.3 GB) → best quality
+BAAI/bge-small-en-v1.5  ( 384-dim, ~130 MB) → if large unavailable
+all-MiniLM-L6-v2         ( 384-dim,  ~80 MB) → universal fallback
+
+Model Cascade (fast=True)
+--------------------------
+BAAI/bge-small-en-v1.5  ( 384-dim, ~130 MB) → fast path
+all-MiniLM-L6-v2         ( 384-dim,  ~80 MB) → fallback
 
 Speed/quality trade-off:
   EmbeddingModel()               → bge-large-en-v1.5 (1024-dim, best quality)

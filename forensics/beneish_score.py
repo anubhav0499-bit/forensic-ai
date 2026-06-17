@@ -1,7 +1,32 @@
 """
-Beneish M-Score - Earnings Manipulation Probability Model
-=========================================================
-Original: Beneish (1999) "The Detection of Earnings Manipulation"
+Beneish M-Score — Earnings Manipulation Probability Model
+==========================================================
+
+References
+----------
+Beneish, M. D. (1999). "The Detection of Earnings Manipulation."
+    Financial Analysts Journal, 55(5), 24–36.
+    Logistic model: M = -4.84 + 0.920×DSRI + 0.528×GMI + 0.404×AQI
+                         + 0.892×SGI + 0.115×DEPI - 0.172×SGAI
+                         + 4.679×TATA - 0.327×LVGI
+    Threshold: M > -1.78 → manipulator; M < -2.22 → non-manipulator.
+
+Beneish, M. D. (1997). "Detecting GAAP Violation: Implications for
+    Assessing Earnings Management Among Firms with Extreme Financial
+    Performance." Journal of Accounting and Public Policy, 16(3), 271–309.
+
+Audit Standards
+---------------
+ISA 240 (IAASB): The Auditor's Responsibilities Relating to Fraud in
+    an Audit of Financial Statements — §A.1 incentive/pressure conditions.
+SA 240 (ICAI): Corresponding Indian standard.
+PCAOB AS 2401: Consideration of Fraud in a Financial Statement Audit.
+
+Fraud Case Context
+------------------
+Historical manipulators in FRAUD_CASE_LIBRARY: Satyam Computers (DSRI
+spike FY2008), Luckin Coffee (SGI 7×, 2019), Wirecard AG (TATA > 0.10).
+
 M-Score > -1.78 suggests high probability of earnings manipulation.
 
 8 Financial Ratios:

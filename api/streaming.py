@@ -1,5 +1,32 @@
 """
-Streaming — Server-Sent Events (SSE) for real-time token streaming.
+Streaming — Server-Sent Events (SSE) for real-time token streaming
+====================================================================
+
+References
+----------
+W3C Server-Sent Events Specification (2021).
+    https://www.w3.org/TR/eventsource/
+    SSE frame format: "data: {json}\n\n"; "data: [DONE]\n\n" for end-of-stream.
+    Used here for FastAPI async streaming responses.
+
+Shoeybi, M., et al. (2020). "Megatron-LM: Training Multi-Billion Parameter
+    Language Models Using GPU Model Parallelism." arXiv:1909.08053.
+    Background on LLM token-streaming architectures and latency trade-offs.
+
+Provider Streaming Support
+---------------------------
+Native streaming (provider .stream() method):
+    Groq, OpenAI, Anthropic — support token-by-token streaming natively.
+Chunked fallback (full generation → 5-token chunks):
+    Ollama, LM Studio, HuggingFace — chunked if .stream() unavailable.
+
+Interfaces
+----------
+stream_sse()   → AsyncGenerator[str, None] for FastAPI StreamingResponse
+stream_sync()  → Generator[str, None, None] for Streamlit st.write_stream()
+
+SSE Frame format: data: {"token": "...", "done": false}\\n\\n
+                  data: {"token": "",    "done": true}\\n\\n
 
 FastAPI integration:
     from fastapi import FastAPI

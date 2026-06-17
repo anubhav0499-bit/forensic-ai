@@ -1,6 +1,24 @@
 """
 LangGraph Agentic RAG Workflow
 ================================
+
+References
+----------
+LangGraph (LangChain Inc., 2024). "LangGraph: Build stateful, multi-actor
+    applications with LLMs." github.com/langchain-ai/langgraph.
+    StateGraph with typed state, conditional edges, and cycle support.
+
+Edge, D., et al. (2024). "From Local to Global: A Graph RAG Approach to
+    Query-Focused Summarization." arXiv:2404.16130.
+    Agentic routing pattern: classify query → select retrieval strategy.
+
+Yao, S., et al. (2022). "ReAct: Synergizing Reasoning and Acting in
+    Language Models." ICLR 2023.
+    ReAct loop: reason → act (retrieve) → observe → reason. Implemented
+    here as relevance_check → retriever (loop ≤ 3 iterations).
+
+12-Step Workflow Architecture
+------------------------------
 Implements the exact 12-step architecture diagram:
 
   [User Query]

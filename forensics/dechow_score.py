@@ -1,7 +1,31 @@
 """
-Dechow F-Score - Probability of Financial Misreporting
+Dechow F-Score — Probability of Financial Misreporting
 =======================================================
-Dechow, Ge, Larson, Sloan (2011) "Predicting Material Accounting Misstatements"
+
+References
+----------
+Dechow, P. M., Ge, W., Larson, C. R., & Sloan, R. G. (2011).
+    "Predicting Material Accounting Misstatements."
+    Contemporary Accounting Research, 28(1), 17–82.
+    Logistic model trained on SEC AAER sample 1982–2005.
+    Formula:
+      ln(p/1-p) = -7.893 + 0.790×RSST + 2.518×ΔAR + 1.191×ΔInv
+                  + 1.979×SoftAssets + 0.171×ΔCashSales
+                  - 0.932×ΔROA + 1.029×Issued
+    Base rate ≈ 0.0037; F-Score > 0.025 → 6.7× base rate misstatement risk.
+
+Richardson, S. A., Sloan, R. G., Soliman, M. T., & Tuna, I. (2005).
+    "Accrual Reliability, Earnings Persistence, and Stock Prices."
+    Journal of Accounting and Economics, 39(3), 437–485.
+    RSST Accrual = ΔWorking Capital + ΔNon-current + ΔFinancial.
+
+Audit Standards
+---------------
+PCAOB AS 2401 §66: "Fraud Risk Factors Relating to Misstatements
+    Arising from Fraudulent Financial Reporting."
+ISA 240 §A1–A6: Risk factors related to incentives/pressures.
+Companies Act 2013 §143(12): Reporting of suspected fraud by auditors.
+
 Uses financial statement characteristics to predict AAER (SEC enforcement actions).
 Higher F-Score = Higher probability of misreporting.
 """

@@ -1,6 +1,39 @@
 """
-Accrual Analysis - Earnings Quality via Cash vs Accrual Earnings
-=================================================================
+Accrual Analysis — Earnings Quality via Cash vs. Accrual Earnings
+==================================================================
+
+References
+----------
+Sloan, R. G. (1996). "Do Stock Prices Fully Reflect Information in
+    Accruals and Cash Flows About Future Earnings?" The Accounting
+    Review, 71(3), 289–315.
+    Balance sheet accrual = ΔWorking Capital − ΔCash − Depreciation.
+    Firms with high accruals (relative to assets) experience lower
+    future earnings — the "accrual anomaly."
+
+Richardson, S. A., Sloan, R. G., Soliman, M. T., & Tuna, I. (2005).
+    "Accrual Reliability, Earnings Persistence, and Stock Prices."
+    Journal of Accounting and Economics, 39(3), 437–485.
+    RSST extension: splits accruals into working capital, non-current
+    operating, and financial accruals for finer manipulation detection.
+
+Dechow, P. M., & Dichev, I. D. (2002). "The Quality of Accruals and
+    Earnings: The Role of Accrual Estimation Errors." The Accounting
+    Review, 77(Supplement), 35–59.
+
+Accrual Thresholds
+------------------
+CF Accrual Ratio > 0.10 (10% of assets) = CRITICAL earnings quality risk.
+CF Accrual Ratio 0.05–0.10 = ELEVATED.
+Cash Earnings Ratio (CFO/NI) < 0.70 = CONCERN.
+CFO/EBITDA < 0.85 = ELEVATED; < 0.70 = HIGH risk.
+
+Audit Standards
+---------------
+ISA 315 §A42: Understanding revenue recognition as key assertion.
+Ind AS 115 (IFRS 15): Revenue recognition — 5-step model.
+SA 505 (ICAI): External Confirmations — receivables validation.
+
 High accruals relative to assets indicate earnings not backed by cash.
 Sloan (1996): Firms with high accruals tend to have lower future earnings.
 """

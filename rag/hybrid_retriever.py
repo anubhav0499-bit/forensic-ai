@@ -1,5 +1,35 @@
 """
-Hybrid Retriever - Combines BM25 + Dense Retrieval with Reciprocal Rank Fusion
+Hybrid Retriever — BM25 + Dense Retrieval with Reciprocal Rank Fusion
+======================================================================
+
+References
+----------
+Robertson, S., & Zaragoza, H. (2009). "The Probabilistic Relevance
+    Framework: BM25 and Beyond." Foundations and Trends in Information
+    Retrieval, 3(4), 333–389.
+    BM25Okapi: term-frequency saturation + document-length normalization.
+    Weights in this implementation: BM25=0.4, Dense=0.6.
+
+Cormack, G. V., Clarke, C. L. A., & Buettcher, S. (2009). "Reciprocal
+    Rank Fusion Outperforms Condorcet and Individual Rank Learning
+    Methods." SIGIR 2009, 758–759.
+    RRF score = Σ 1/(k + rank_i), k=60 (empirically optimal constant).
+
+Ma, X., et al. (2023). "Fine-Tuning LLaMA for Multi-Stage Text
+    Retrieval." arXiv:2310.08319. (multi-query RRF strategy baseline)
+
+Cross-Encoder Reranking
+------------------------
+Nogueira, R., & Cho, K. (2019). "Passage Re-ranking with BERT."
+    arXiv:1901.04085.
+    Model: cross-encoder/ms-marco-MiniLM-L-6-v2 (lazy-loaded).
+
+Fusion Architecture
+--------------------
+search()                — single query, BM25+dense RRF
+search_with_reranking() — single query + cross-encoder rerank
+search_multi()          — multi-query RRF merge (query diversity)
+search_multi_reranked() — multi-query RRF + cross-encoder on primary
 """
 
 from __future__ import annotations

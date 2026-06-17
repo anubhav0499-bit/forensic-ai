@@ -1,7 +1,30 @@
 """
-Piotroski F-Score - Financial Strength Assessment
+Piotroski F-Score — Financial Strength Assessment
 ==================================================
-Piotroski (2000) "Value Investing: The Use of Historical Financial Statement Information"
+
+References
+----------
+Piotroski, J. D. (2000). "Value Investing: The Use of Historical
+    Financial Statement Information to Separate Winners from Losers."
+    Journal of Accounting Research, 38(Supplement), 1–41.
+    9 binary signals across 3 categories (profitability, leverage/liquidity,
+    efficiency). Score 8–9 = strong; 0–2 = distressed.
+
+Hyde, C. E. (2018). "The Piotroski F-Score: Evidence from Australia."
+    Accounting & Finance, 58(2), 423–444. (cross-market validation)
+
+F-Score Signal Categories
+--------------------------
+Profitability (F1–F4): ROA > 0; CFO > 0; ΔROA > 0; CFO/Assets > ROA.
+Leverage/Liquidity (F5–F7): ΔLeverage < 0; ΔCurrent Ratio > 0; no dilution.
+Efficiency (F8–F9): ΔGross Margin > 0; ΔAsset Turnover > 0.
+
+Regulatory Context
+------------------
+SEBI LODR Reg. 33: Quarterly financial results — basis for YoY trend.
+Ind AS 7 (IAS 7): Statement of Cash Flows — CFO signal accuracy.
+CARO 2020 Para 3(vii): Comment on company's ability to service debt.
+
 9 binary criteria across 3 categories. Score: 0-9.
 Strong: 7-9 | Neutral: 3-6 | Weak: 0-2
 """

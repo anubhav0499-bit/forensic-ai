@@ -1,7 +1,30 @@
 """
-FAISS Vector Store — High-performance local similarity search with persistence.
+FAISS Vector Store — High-performance local similarity search with persistence
+==============================================================================
+
+References
+----------
+Johnson, J., Douze, M., & Jégou, H. (2019). "Billion-Scale Similarity
+    Search with GPUs." IEEE Transactions on Big Data, 7(3), 535–547.
+    FAISS (Facebook AI Similarity Search) — IndexFlatIP used here
+    (inner product = cosine similarity on L2-normalised vectors).
+
+Douze, M., et al. (2024). "The FAISS Library." arXiv:2401.08281.
+    Comprehensive overview of FAISS index types, quantisation methods,
+    and GPU acceleration strategies.
+
+Index Type
+----------
+IndexFlatIP: exact inner-product search (no quantisation, full recall).
+Input vectors are L2-normalised so inner-product == cosine similarity.
+Metadata is co-stored in a companion .pkl file for filtering support.
+
+Persistence Layout
+------------------
+{DATA_DIR}/faiss_db/{company}.faiss     — FAISS binary index
+{DATA_DIR}/faiss_db/{company}_meta.pkl  — list[dict] metadata records
+
 Drop-in alternative to ChromaDB for faster in-memory retrieval.
-Persistence: {DATA_DIR}/faiss_db/{company}.faiss + {company}_meta.pkl
 """
 
 from __future__ import annotations

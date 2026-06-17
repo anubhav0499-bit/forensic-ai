@@ -1,5 +1,34 @@
 """
-Base Forensic Agent - Foundation class for all investigation agents
+Base Forensic Agent — Foundation class for all investigation agents
+====================================================================
+
+References
+----------
+ISA 315 (Revised 2019): Identifying and Assessing the Risks of Material
+    Misstatement — §A200: "Understanding the Entity and Its Environment."
+    Basis for Evidence → Analysis → Reasoning → Conclusion framework.
+
+ISA 240: The Auditor's Responsibilities Relating to Fraud — §A1–A6:
+    Fraud risk factors; used to structure red-flag detection logic.
+
+PCAOB AS 2101: Audit Planning — systematic evidence-gathering approach
+    mirrored in each agent's investigation() method.
+
+Honovich, O., et al. (2022). "TRUE: Re-evaluating Factual Consistency
+    Evaluation." NAACL 2022. Basis for Guardrails integration.
+
+Es, S., et al. (2023). "RAGAS." arXiv:2309.15217.
+    HarnessResult + Guardrails pipeline analogous to RAGAS faithfulness.
+
+Agent Design Pattern
+--------------------
+All agents inherit from BaseForensicAgent:
+  _retrieve_context()     — multi-query RAG via ContextBuilder
+  _analyze_and_extract()  — LLM call + OutputHarness + Guardrails
+  _run_agentic_rag()      — LangGraph 12-step pipeline with fallback
+  _create_finding()       — log to audit trail + persist to SQLite
+  _save_output()          — write agent JSON to Agent_Outputs/
+
 Implements: Evidence → Analysis → Reasoning → Conclusion framework
 """
 

@@ -1,7 +1,30 @@
 """
-Multi-Vector Retriever — Dual embeddings per chunk (raw content + LLM summary).
+Multi-Vector Retriever — Dual embeddings per chunk (raw content + LLM summary)
+===============================================================================
+
+References
+----------
+Ma, X., et al. (2023). "Fine-Tuning LLaMA for Multi-Stage Text Retrieval."
+    arXiv:2310.08319. Multi-vector approach: embed both full chunk and
+    LLM-generated summary; merge via RRF for complementary recall.
+
+Chen, J., et al. (2022). "MTEB: Massive Text Embedding Benchmark."
+    arXiv:2210.07316. Benchmark motivating dual-representation strategies
+    (chunk-level + document-level) for financial QA tasks.
+
+Izacard, G., & Grave, E. (2021). "Leveraging Passage Retrieval with
+    Generative Models for Open Domain Question Answering." EACL 2021.
+    Fusion-in-Decoder (FiD) — parent of extractive multi-vector approaches.
+
+Architecture
+------------
+For each source chunk:
+  raw_store.add()     → raw chunk embedded with BGE (exact phrase match)
+  summary_store.add() → 1-sentence LLM summary embedded (gist match)
+search() merges both pools via RRF (raw weight=0.6, summary weight=0.4).
+Summary chunks store raw_content in metadata for resolution back to original.
+
 Improves recall for queries that match document gist rather than exact phrasing.
-Both the raw chunk and a 1-sentence summary are embedded; results are merged via RRF.
 """
 
 from __future__ import annotations

@@ -1,6 +1,25 @@
 """
 LlamaIndex RAG Pipeline
 ========================
+
+References
+----------
+Liu, J. (2022). "LlamaIndex: A data framework for your LLM applications."
+    github.com/run-llama/llama_index. VectorStoreIndex + ChromaVectorStore
+    integration used for financial document retrieval.
+
+Ma, X., et al. (2023). "Query Rewriting for Retrieval-Augmented Large
+    Language Models." arXiv:2305.14283.
+    HyDE (Hypothetical Document Embedding): generate a hypothetical
+    answer first, then embed it as the query — improves sparse-query recall.
+
+Gao, L., et al. (2022). "Precise Zero-Shot Dense Retrieval without
+    Relevance Labels." arXiv:2212.10496.
+    Formal HyDE paper: embedding a hypothetical passage outperforms
+    embedding the question directly on most BEIR benchmarks.
+
+Provided Services
+------------------
 Context-aware financial document retrieval backed by the existing ChromaDB
 vector store.  Provides:
 

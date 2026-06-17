@@ -1,7 +1,34 @@
 """
-Altman Z-Score - Bankruptcy Prediction Model
-=============================================
-Original: Altman (1968) "Financial Ratios, Discriminant Analysis and the Prediction of Corporate Bankruptcy"
+Altman Z-Score — Bankruptcy & Financial Distress Prediction
+============================================================
+
+References
+----------
+Altman, E. I. (1968). "Financial Ratios, Discriminant Analysis and the
+    Prediction of Corporate Bankruptcy." Journal of Finance, 23(4), 589–609.
+    Original manufacturing model: Z = 1.2×X1 + 1.4×X2 + 3.3×X3 + 0.6×X4 + X5
+    Safe zone Z > 2.99; Distress zone Z < 1.81.
+
+Altman, E. I. (2000). "Predicting Financial Distress of Companies:
+    Revisiting the Z-Score and ZETA® Models." Stern School of Business.
+    Non-manufacturing Z' = 6.56×X1 + 3.26×X2 + 6.72×X3 + 1.05×X4.
+
+Altman, E. I., Haldeman, R. G., & Narayanan, P. (1977). "ZETA Analysis:
+    A New Model to Identify Bankruptcy Risk of Corporations." Journal of
+    Banking & Finance, 1(1), 29–54.
+
+Implied Credit Rating Mapping
+------------------------------
+Z > 8.0 → AAA; 6.0–8.0 → AA; 4.5–6.0 → A; 3.5–4.5 → BBB;
+2.5–3.5 → BB; 1.5–2.5 → B; 1.0–1.5 → CCC; < 1.0 → D (Default).
+
+Audit Standards
+---------------
+ISA 570: Going Concern — auditor assessment of financial distress.
+SA 570 (ICAI): Indian equivalent of ISA 570.
+CARO 2020 Para 3(xii): Auditor must comment on ability to continue as
+    a going concern (Indian Companies).
+
 Revised: Altman (2000) for private firms and non-manufacturing firms.
 
 Manufacturing (public):  Z = 1.2*X1 + 1.4*X2 + 3.3*X3 + 0.6*X4 + 1.0*X5

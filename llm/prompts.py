@@ -1,5 +1,38 @@
 """
-Forensic AI - System Prompts and Prompt Builders
+Forensic AI — System Prompts and Prompt Builders
+==================================================
+
+Frameworks Embedded in Prompts
+--------------------------------
+ISA 240 (IAASB): Fraud in an Audit — Fraud Triangle (pressure, opportunity,
+    rationalisation); management override risk factors (§A50–A55).
+PCAOB AS 2401: Fraud in Financial Statement Audit — brainstorming, red flags.
+PCAOB AS 2101: Audit Planning — risk-based approach to financial analysis.
+COSO Internal Control Framework (2013): 5 components × 17 principles;
+    Control Environment, Risk Assessment, Control Activities, Information &
+    Communication, Monitoring.
+SEBI LODR Regulations 2015 (Reg. 17–27): Board composition, audit committee,
+    RPT approval, risk management committee requirements.
+SEBI SAST Regulations 2011: Promoter pledge thresholds and disclosure.
+OECD Corporate Governance Principles (2023): Board independence, shareholder
+    rights, transparency and disclosure.
+SEBI RPT Regulations 2021: Related Party Transaction approval thresholds
+    and omnibus approval limits.
+
+Academic References
+--------------------
+Beneish (1999); Dechow, Ge, Larson & Sloan (2011); Altman (1968, 2000);
+Piotroski (2000); Sloan (1996) — see individual module docstrings.
+
+Prompt Design
+--------------
+build_analysis_prompt() constructs structured prompts with:
+  - knowledge_context (agent-specific standards + fraud cases from knowledge/)
+  - FINANCIAL DATA section (structured JSON → readable format)
+  - RETRIEVED CONTEXT section (RAG chunks from HybridRetriever)
+  - Cross-validation issues from CrossValidator
+  - Explicit Evidence → Analysis → Reasoning → Conclusion instruction
+
 Frameworks: ISA 240, PCAOB AS 2401/2101, COSO Internal Control Framework,
             SEBI LODR/SAST/RPT Regulations 2021, OECD Corporate Governance Principles,
             Beneish (1999) M-Score, Dechow et al. (2011) F-Score, Altman EM Z-Score.
