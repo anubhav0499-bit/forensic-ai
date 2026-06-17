@@ -16,6 +16,7 @@ from llm.output_harness import OutputHarness, HarnessResult
 from rag.hybrid_retriever import HybridRetriever
 from database.sqlite_handler import SQLiteHandler
 from utils.audit_trail import AuditTrail
+from utils.guardrails import Guardrails
 from utils.storage import StorageManager
 from config import AGENT_NAMES, AGENT_CONTEXT_QUERIES, CONTEXT_CONFIG, HARNESS_CONFIG, AGENTIC_RAG_CONFIG
 
@@ -79,6 +80,7 @@ class BaseForensicAgent(ABC):
         self.company_id = company_id
         self._ctx = ContextBuilder(retriever)
         self._harness = OutputHarness()
+        self._guardrails = Guardrails(groundedness_threshold=0.20, block_on_fail=False)
 
     @abstractmethod
     def investigate(
@@ -159,7 +161,11 @@ class BaseForensicAgent(ABC):
         if HARNESS_CONFIG.request_structured_output:
             prompt = prompt + self._harness.structured_output_suffix()
         raw = self.llm.generate(prompt, system_prompt, max_tokens=max_tokens)
-        return self._harness.extract(raw, company_name=company_name)
+        result = self._harness.extract(raw, company_name=company_name)
+        # Run guardrails on extracted output; attach scores to HarnessResult
+        if result.raw_text:
+            self._guardrails.enrich_harness_result(result, context=prompt, query="")
+        return result
 
     def _run_agentic_rag(
         self,

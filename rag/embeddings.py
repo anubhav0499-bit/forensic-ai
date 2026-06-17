@@ -1,6 +1,11 @@
 """
-Embedding Model - BAAI/bge-large-en-v1.5 for financial document embeddings
-Falls back to all-MiniLM-L6-v2 if the larger model is unavailable.
+Embedding Model - BAAI/bge-large-en-v1.5 for financial document embeddings.
+Falls back to bge-small-en-v1.5 (fast, ~130 MB) then all-MiniLM-L6-v2.
+
+Speed/quality trade-off:
+  EmbeddingModel()               → bge-large-en-v1.5 (1024-dim, best quality)
+  EmbeddingModel(fast=True)      → bge-small-en-v1.5  (384-dim, ~4× faster, ~130 MB)
+  EMBEDDING_CONFIG.model_name=…  → override via .env
 """
 
 from __future__ import annotations
@@ -9,42 +14,50 @@ from typing import Union
 from loguru import logger
 from config import EMBEDDING_CONFIG
 
+_BGE_SMALL = "BAAI/bge-small-en-v1.5"
+
 
 class EmbeddingModel:
     """
     Sentence embedding model for financial document similarity search.
-    Primary: BAAI/bge-large-en-v1.5 (best for English financial text)
-    Fallback: all-MiniLM-L6-v2 (fast, smaller)
+
+    Quality tier  (default):  BAAI/bge-large-en-v1.5  — 1024-dim, best for financial text
+    Speed tier    (fast=True): BAAI/bge-small-en-v1.5  — 384-dim, ~4× faster, ~130 MB
+    Final fallback:            all-MiniLM-L6-v2         — 384-dim, universal fallback
     """
 
-    def __init__(self):
+    def __init__(self, fast: bool = False):
         self.model = None
         self.model_name = None
+        self._fast = fast
         self._load_model()
 
     def _load_model(self) -> None:
-        try:
-            from sentence_transformers import SentenceTransformer
-            logger.info(f"Loading embedding model: {EMBEDDING_CONFIG.model_name}")
-            self.model = SentenceTransformer(
-                EMBEDDING_CONFIG.model_name,
-                device=self._get_device(),
-            )
-            self.model_name = EMBEDDING_CONFIG.model_name
-            logger.info(f"Embedding model loaded: {self.model_name} (dim={self.get_dimension()})")
-        except Exception as e:
-            logger.warning(f"Primary embedding model failed ({e}), trying fallback")
+        from sentence_transformers import SentenceTransformer
+        device = self._get_device()
+
+        # Ordered candidate list
+        candidates = (
+            [_BGE_SMALL, EMBEDDING_CONFIG.fallback_model]
+            if self._fast
+            else [EMBEDDING_CONFIG.model_name, _BGE_SMALL, EMBEDDING_CONFIG.fallback_model]
+        )
+
+        for model_name in candidates:
             try:
-                from sentence_transformers import SentenceTransformer
-                self.model = SentenceTransformer(
-                    EMBEDDING_CONFIG.fallback_model,
-                    device=self._get_device(),
+                logger.info(f"Loading embedding model: {model_name}")
+                self.model = SentenceTransformer(model_name, device=device)
+                self.model_name = model_name
+                logger.info(
+                    f"Embedding model ready: {self.model_name} "
+                    f"(dim={self.get_dimension()}, device={device})"
                 )
-                self.model_name = EMBEDDING_CONFIG.fallback_model
-                logger.info(f"Using fallback model: {self.model_name}")
-            except Exception as e2:
-                logger.error(f"All embedding models failed: {e2}")
-                self.model = None
+                return
+            except Exception as exc:
+                logger.warning(f"  {model_name} failed: {exc} — trying next")
+
+        logger.error("All embedding models failed; using zero-vector fallback")
+        self.model = None
 
     def _get_device(self) -> str:
         try:

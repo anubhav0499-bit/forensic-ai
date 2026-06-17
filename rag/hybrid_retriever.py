@@ -143,6 +143,32 @@ class HybridRetriever:
                 results.append(r)
         return results
 
+    def search_multi_reranked(
+        self,
+        company_name: str,
+        queries: list[str],
+        n_per_query: int = 6,
+        n_final: int = 10,
+    ) -> list[dict]:
+        """
+        Multi-query hybrid search followed by cross-encoder reranking.
+        Use instead of search_multi() when precision matters more than speed.
+        """
+        candidates = self.search_multi(company_name, queries, n_per_query=n_per_query)
+        if not candidates:
+            return candidates
+
+        # Rerank using the primary (first) query as the pivot
+        primary_query = queries[0] if queries else ""
+        try:
+            reranker = self._get_reranker()
+            pairs = [(primary_query, c["content"]) for c in candidates]
+            scores = reranker.predict(pairs)
+            ranked = sorted(zip(scores, candidates), key=lambda x: x[0], reverse=True)
+            return [r for _, r in ranked[:n_final]]
+        except Exception:
+            return candidates[:n_final]
+
     def get_context_for_agent(
         self,
         company_name: str,

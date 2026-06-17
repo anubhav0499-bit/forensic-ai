@@ -1,15 +1,16 @@
 """
 Context Builder — Multi-query RAG retrieval with deduplication, relevance
-scoring, and token-budget-aware assembly.
+scoring, token-budget-aware assembly, and optional LLM context compression.
 
-Replaces the single-query _retrieve_context() pattern with a structured
-multi-query pipeline that maximises information density per token budget.
+Pipeline:
+  retrieve → deduplicate → score-sort → assemble → [compress]
 """
 
 from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass, field
+from typing import Optional
 
 
 @dataclass
@@ -29,6 +30,14 @@ class ContextBuilder:
     """
     Multi-query context assembly for forensic agents.
 
+    Pipeline:
+      1. Run all queries against the hybrid retriever.
+      2. Deduplicate near-identical chunks (Jaccard >= 0.65).
+      3. Sort by relevance score (descending).
+      4. Assemble within token budget.
+      5. Optionally compress via ContextCompressor (LLM-based or keyword-based).
+      6. Cache per (company_name, sorted query set).
+
     Usage:
         builder = ContextBuilder(retriever)
         context = builder.build(
@@ -37,20 +46,18 @@ class ContextBuilder:
             budget_tokens=3000,
         )
 
-    The builder:
-    1. Runs all queries against the hybrid retriever in sequence.
-    2. Deduplicates near-identical chunks (Jaccard token overlap >= 0.65).
-    3. Sorts survivors by relevance score (descending).
-    4. Assembles into a structured text block within the token budget.
-    5. Caches the final context per (company_name, sorted query set).
+        # With compression:
+        from rag.context_compressor import ContextCompressor
+        builder = ContextBuilder(retriever, compressor=ContextCompressor(llm))
     """
 
     _DEDUP_THRESHOLD = 0.65
-    _CHARS_PER_TOKEN = 4          # conservative approximation
+    _CHARS_PER_TOKEN = 4
     _MIN_CHUNK_CHARS = 40
 
-    def __init__(self, retriever) -> None:
+    def __init__(self, retriever, compressor=None) -> None:
         self.retriever = retriever
+        self.compressor = compressor   # optional ContextCompressor
         self._cache: dict[str, str] = {}
 
     # ── Public API ─────────────────────────────────────────────────
@@ -61,10 +68,15 @@ class ContextBuilder:
         queries: list[str] | str,
         budget_tokens: int = 3000,
         n_per_query: int = 6,
+        compress: bool = False,
+        primary_query: str = "",
     ) -> str:
         """
         Build context from one or more queries, deduplicated and budget-bounded.
         Returns formatted text ready for LLM prompt injection.
+
+        compress=True: apply ContextCompressor after assembly (requires compressor set).
+        primary_query: used as the compression target; defaults to queries[0].
         """
         if isinstance(queries, str):
             queries = [queries]
@@ -72,7 +84,7 @@ class ContextBuilder:
         if not queries:
             return ""
 
-        cache_key = f"{company_name}||{'|'.join(sorted(queries))}"
+        cache_key = f"{company_name}||{'|'.join(sorted(queries))}||{compress}"
         if cache_key in self._cache:
             return self._cache[cache_key]
 
@@ -80,6 +92,12 @@ class ContextBuilder:
         chunks = self._deduplicate(chunks)
         chunks.sort(key=lambda c: c.score, reverse=True)
         context = self._assemble(chunks, budget_tokens)
+
+        if compress and self.compressor and context:
+            q_for_compression = primary_query or queries[0]
+            context = self.compressor.compress(
+                context, q_for_compression, max_tokens=budget_tokens
+            )
 
         self._cache[cache_key] = context
         return context

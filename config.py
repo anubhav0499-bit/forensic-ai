@@ -648,6 +648,83 @@ class AgenticRAGConfig:
 AGENTIC_RAG_CONFIG = AgenticRAGConfig()
 
 # ─────────────────────────────────────────────
+# FAISS CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class FAISSConfig:
+    enabled: bool = os.getenv("FAISS_ENABLED", "false").lower() == "true"
+    persist_dir: Path = DATA_DIR / "faiss_db"
+
+FAISS_CONFIG = FAISSConfig()
+
+# ─────────────────────────────────────────────
+# MULTI-VECTOR RETRIEVAL CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class MultiVectorConfig:
+    enabled: bool = os.getenv("MULTI_VECTOR_ENABLED", "false").lower() == "true"
+    # Use LLM for summary generation (True) or first-sentence extraction (False)
+    llm_summaries: bool = os.getenv("MULTI_VECTOR_LLM_SUMMARIES", "false").lower() == "true"
+
+MULTI_VECTOR_CONFIG = MultiVectorConfig()
+
+# ─────────────────────────────────────────────
+# CONTEXT COMPRESSION CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class ContextCompressionConfig:
+    enabled: bool = os.getenv("CONTEXT_COMPRESSION_ENABLED", "false").lower() == "true"
+    compression_ratio: float = float(os.getenv("CONTEXT_COMPRESSION_RATIO", "0.5"))
+    # True = LLM-based extraction; False = keyword overlap scoring
+    use_llm: bool = os.getenv("CONTEXT_COMPRESSION_LLM", "false").lower() == "true"
+
+CONTEXT_COMPRESSION_CONFIG = ContextCompressionConfig()
+
+# ─────────────────────────────────────────────
+# CONVERSATION MEMORY CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class ConversationMemoryConfig:
+    enabled: bool = os.getenv("CONVERSATION_MEMORY_ENABLED", "true").lower() == "true"
+    max_history_turns: int = int(os.getenv("CONV_MEMORY_MAX_TURNS", "5"))
+    db_path: Path = DATA_DIR / "conversation_memory.db"
+
+CONVERSATION_MEMORY_CONFIG = ConversationMemoryConfig()
+
+# ─────────────────────────────────────────────
+# GUARDRAILS CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class GuardrailsConfig:
+    enabled: bool = os.getenv("GUARDRAILS_ENABLED", "true").lower() == "true"
+    groundedness_threshold: float = float(os.getenv("GUARDRAILS_GROUNDEDNESS", "0.20"))
+    # block_on_fail=True refuses to return responses that fail guardrails
+    block_on_fail: bool = os.getenv("GUARDRAILS_BLOCK_ON_FAIL", "false").lower() == "true"
+
+GUARDRAILS_CONFIG = GuardrailsConfig()
+
+# ─────────────────────────────────────────────
+# STREAMING CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class StreamingConfig:
+    enabled: bool = os.getenv("STREAMING_ENABLED", "true").lower() == "true"
+    chunk_size: int = int(os.getenv("STREAMING_CHUNK_SIZE", "25"))
+
+STREAMING_CONFIG = StreamingConfig()
+
+# ─────────────────────────────────────────────
+# RAGAS EVALUATION CONFIGURATION
+# ─────────────────────────────────────────────
+@dataclass
+class RAGASConfig:
+    enabled: bool = os.getenv("RAGAS_EVAL_ENABLED", "false").lower() == "true"
+    # Run eval after each full analysis? (expensive — disable in production)
+    run_after_analysis: bool = os.getenv("RAGAS_RUN_AFTER_ANALYSIS", "false").lower() == "true"
+
+RAGAS_CONFIG = RAGASConfig()
+
+# ─────────────────────────────────────────────
 # PEER INDUSTRY MAPPING
 # ─────────────────────────────────────────────
 INDUSTRY_PEER_GROUPS = {
