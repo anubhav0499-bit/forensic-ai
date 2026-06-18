@@ -1,5 +1,24 @@
 """
-PDF Report Generator - Using ReportLab for institutional-grade PDFs
+PDF Report Generator — Using ReportLab for institutional-grade PDFs
+====================================================================
+
+References
+----------
+ReportLab (1999-2023). "ReportLab PDF Library." reportlab.com.
+    Programmatic PDF generation with custom layouts, charts, and embedded fonts.
+WeasyPrint (2011-2023). weasyprint.org.
+    Alternative HTML-to-PDF renderer; used when ReportLab unavailable.
+
+Standards
+---------
+ISO 32000 (PDF 1.7 Standard) — PDF/A compliance for long-term archival of
+    forensic investigation records.
+
+Role
+----
+Generates a print-ready PDF version of the forensic report. Architecture: render
+DOCX → convert to PDF via python-docx + win32com (Windows) or LibreOffice
+(Linux/Mac). ReportLab fallback for charts and tables when conversion unavailable.
 """
 
 from __future__ import annotations

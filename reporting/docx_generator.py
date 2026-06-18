@@ -1,6 +1,32 @@
 """
-DOCX Report Generator - Institutional-grade Word document (15,000-40,000 words)
-25 structured sections covering all forensic dimensions
+DOCX Report Generator — Institutional-grade Word document (15,000–40,000 words)
+================================================================================
+25 structured sections covering all forensic dimensions.
+
+References
+----------
+Canny, S. (2012-2023). "python-docx: Create and modify Word documents."
+    python-docx.readthedocs.io.
+    Core DOCX generation library; styles, headings, tables, footnotes.
+
+Standards
+---------
+SEBI LODR Regulation 33 & 34 — Listed entity financial disclosure obligations;
+    report structure maps to statutory disclosure requirements.
+PCAOB AS 3101 — Critical Audit Matters reporting format adapted for forensic
+    findings presentation.
+ISA 265 / SA 265 — Communicating deficiencies in internal control; findings
+    communication format.
+Companies Act 2013 §134 — Board's Report requirements; governance and risk
+    sections modelled on statutory board report format.
+
+Role
+----
+Generates the primary long-form Word document report. Structure: Executive Summary
+(verdict + risk score) → 17 Agent Findings (one section per agent) → Forensic Model
+Scores (Beneish/Dechow/Altman/Piotroski/Accrual) → Governance Assessment →
+Regulatory Risk → Recommendations → Technical Appendix (full calculations).
+Word count: 15,000–40,000 words depending on data availability.
 """
 
 from __future__ import annotations

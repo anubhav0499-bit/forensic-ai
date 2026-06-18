@@ -1,5 +1,24 @@
 """
-PPTX Generator - Executive presentation deck
+PPTX Generator — Executive presentation deck
+=============================================
+
+References
+----------
+Canny, S. (2012-2023). "python-pptx: Create and update PowerPoint files."
+    python-pptx.readthedocs.io.
+    Slide generation with custom layouts, charts, tables.
+
+Standards
+---------
+SEBI LODR Regulation 30 — Investor/analyst presentation disclosure; PPTX format
+    commonly used for board and investor presentations.
+
+Role
+----
+Generates a 15-20 slide executive summary deck. Slides: Title + verdict (1) →
+Executive summary risk gauge (2) → Agent findings heatmap (3-5) → Forensic model
+scores (6-8) → Governance risk (9-10) → Recommendations (11-12) → Appendix: full
+model calculations (13+).
 """
 
 from __future__ import annotations

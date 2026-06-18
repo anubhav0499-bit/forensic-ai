@@ -1,6 +1,23 @@
 """
 Latency, Scalability & Security Evaluation
+===========================================
 Tests: retrieval latency at concurrency, chunking analysis, security robustness.
+
+References
+----------
+Min, S., et al. (2023). "FActScoring: Fine-grained Atomic Evaluation of Factual
+    Precision in Long Form Text Generation." EMNLP 2023.
+    Hallucination detection methodology applied in security tests.
+Perez, F., & Ribeiro, I. (2022). "Ignore Previous Prompt: Attack Techniques for
+    Language Models." NeurIPS 2022 Workshop on ML Safety.
+    Prompt injection test cases.
+
+Role
+----
+Dual-purpose offline evaluation: (1) latency benchmarking — measures p50/p95/p99
+end-to-end response time per agent; (2) security testing — prompt injection
+resistance, hallucination rate on adversarial queries, guardrail effectiveness.
+Run: python -m eval.run_latency_security
 """
 
 import sys, os, time, threading, pathlib, re

@@ -1,6 +1,22 @@
 """
-Report Compiler - Orchestrates generation of all output formats
+Report Compiler — Orchestrates generation of all output formats
+===============================================================
 PDF, DOCX, XLSX, PPTX, HTML, JSON
+
+Standards
+---------
+SEBI LODR Regulation 46(2)(n) — Annual report and financial results must be
+    available in downloadable format; multi-format generation satisfies diverse
+    consumption requirements.
+ISA 230 / SA 230: Audit Documentation — complete investigation record preserved
+    across all formats.
+
+Role
+----
+Central dispatcher that calls each format generator (DOCX, XLSX, PDF, HTML, PPTX)
+and assembles JSON summary. Handles partial failures gracefully — if PDF generation
+fails, other formats still complete. Output directory:
+~/Documents/Forensic_Reports/{company_slug}/{timestamp}/.
 """
 
 from __future__ import annotations

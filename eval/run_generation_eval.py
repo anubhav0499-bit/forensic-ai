@@ -1,7 +1,23 @@
 """
 Generation Quality & Hallucination Evaluation
-Tests OutputHarness extraction, grounding, hallucination detection, and JSON fidelity.
-Also tests edge cases, adversarial inputs, and the security surface.
+==============================================
+Tests OutputHarness extraction, grounding, hallucination detection, and JSON
+fidelity. Also tests edge cases, adversarial inputs, and the security surface.
+
+References
+----------
+Wei, J., et al. (2022). "Chain-of-Thought Prompting Elicits Reasoning in Large
+    Language Models." NeurIPS 2022. arXiv:2201.11903.
+    Generation quality evaluation tests CoT reasoning in forensic analysis outputs.
+Ouyang, L., et al. (2022). "Training Language Models to Follow Instructions with
+    Human Feedback." NeurIPS 2022.
+    InstructGPT evaluation methodology adapted for forensic output quality.
+
+Role
+----
+Evaluates LLM generation quality (not retrieval quality) — coherence of forensic
+narrative, completeness of findings, citation accuracy. Run offline:
+python -m eval.run_generation_eval
 """
 
 import sys, os, time, re, json, pathlib

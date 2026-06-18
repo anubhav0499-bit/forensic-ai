@@ -1,4 +1,25 @@
-"""RAG Evaluation Corpus — 30 ground-truth financial document chunks."""
+"""
+RAG Evaluation Corpus — 30 ground-truth financial document chunks
+==================================================================
+
+References
+----------
+Es, S., James, J., Espinosa-Anke, L., & Schockaert, S. (2023). "RAGAS: Automated
+    Evaluation of Retrieval Augmented Generation." arXiv:2309.15217.
+    CORPUS and QUERY_GROUND_TRUTH provide the reference dataset for RAGAS
+    evaluation.
+Liu, N. F., et al. (2023). "Lost in the Middle: How Language Models Use Long
+    Contexts." Transactions of the ACL (TACL) 2024.
+    Corpus queries designed to test retrieval of evidence from different positions
+    in context.
+
+Role
+----
+Fixed evaluation dataset (10 companies x 5 forensic queries each = 50 query-answer
+pairs) with ground-truth answers and source citations. Used by eval/run_eval.py and
+eval/run_latency_security.py for offline RAGAS benchmarking. Not called during
+production runs.
+"""
 
 CORPUS = [
     # (id, chunk_type, section, fy, content)

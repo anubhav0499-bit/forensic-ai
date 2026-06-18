@@ -1,8 +1,30 @@
 """
-FORENSIC AI - Streamlit Web Interface
-=====================================
+FORENSIC AI — Streamlit Web Interface
+======================================
 Multi-Agent Forensic Accounting & Financial Intelligence Platform
 No paid APIs. No cloud dependency. Runs locally.
+
+References
+----------
+Treuille, A., et al. (2019-2023). "Streamlit: The fastest way to build and share
+    data apps." streamlit.io.
+    Web UI framework; st.chat_message(), st.progress(), st.plotly_chart() used for
+    investigation visualization.
+Plotly Technologies Inc. (2023). "Plotly: The front-end for ML and data science
+    models." plotly.com.
+    Risk score gauge chart, component radar chart, findings timeline.
+
+Standards
+---------
+SEBI LODR Regulation 46(2) — IR dashboard requirements; app displays financial
+    data in format consistent with statutory disclosure obligations.
+
+Role
+----
+Streamlit web interface for interactive investigations. Features: Company search →
+investigation launch → real-time agent progress (SSE streaming) → results dashboard
+(risk score gauge, agent findings table, forensic model scores) → report download
+(DOCX/XLSX/PDF).
 """
 
 from __future__ import annotations

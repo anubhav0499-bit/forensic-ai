@@ -1,5 +1,23 @@
 """
-HTML Dashboard Generator - Interactive investigation summary
+HTML Dashboard Generator — Interactive investigation summary
+=============================================================
+
+References
+----------
+W3C (2023). "HTML5 / CSS3." w3.org.
+    Responsive report layout; print-media CSS for browser print-to-PDF.
+Chart.js (2023). "Chart.js: Simple yet flexible JavaScript charting." chartjs.org.
+    JavaScript charting library for interactive risk score dashboard, component
+    radar chart.
+Ronacher, A. (2008-2023). "Jinja2 Template Engine."
+    jinja.palletsprojects.com.
+    Template-based HTML report generation.
+
+Role
+----
+Interactive HTML report for web viewing. Features: expandable agent findings
+sections, interactive risk score gauge, responsive table layout, print-to-PDF
+support. Served via FastAPI `/report/{company}` endpoint.
 """
 
 from __future__ import annotations

@@ -1,6 +1,27 @@
 """
-Audit Trail - Complete, auditable record of all investigation steps
+Audit Trail — Complete, auditable record of all investigation steps
+====================================================================
 Every agent action, data source, calculation, and conclusion is logged.
+
+Standards
+---------
+ISA 230 / SA 230: Audit Documentation — auditor must document "sufficient
+    appropriate audit evidence to support the audit opinion." Audit trail
+    implements this requirement digitally.
+PCAOB AS 1215: Audit Documentation — documentation must be completed within 60
+    days of audit report date; permanent record of all findings and conclusions.
+Companies Act 2013 §134(5)(e) — Board responsibility for adequate internal
+    financial controls; audit trail provides evidence of control operation.
+SEBI LODR Regulation 4(2)(f) — Books of account and records preserved for 5 years;
+    audit trail is a mandatory component.
+
+Role
+----
+Append-only investigation log consumed by ReportCompiler for the Audit Trail XLSX
+tab and JSON summary. Log format per entry: timestamp (ISO 8601), agent_id,
+agent_name, action, finding, evidence (first 200 chars), source_document,
+confidence (0-1), risk_level (CRITICAL/HIGH/MEDIUM/LOW). Persisted to:
+data/audit_trail_{company_slug}.jsonl.
 """
 
 from __future__ import annotations

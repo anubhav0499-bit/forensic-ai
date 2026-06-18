@@ -1,6 +1,25 @@
 """
-Storage Manager - Handles all local file system operations
-Supports local disk, Google Colab Drive, and Kaggle datasets
+Storage Manager — Handles all local file system operations
+===========================================================
+Supports local disk, Google Colab Drive, and Kaggle datasets.
+
+References
+----------
+Google Research (2017-2023). "Google Colaboratory." colab.research.google.com.
+    Cloud notebook environment; COLAB_GPU env var detected for output path
+    switching to /content/drive/MyDrive/.
+Kaggle (2023). "Kaggle: ML competition and dataset platform." kaggle.com.
+    KAGGLE_URL_BASE env var detected.
+Python Software Foundation. "pathlib — Object-oriented filesystem paths."
+    docs.python.org. Platform-independent path handling across Windows (local dev)
+    and Linux (Colab/Kaggle).
+
+Role
+----
+Abstracts file I/O across deployment environments. Provides: save_json(),
+save_text(), save_binary(), ensure_dir(). Automatically routes output to Colab
+Drive or Kaggle working directory when those environments are detected; defaults
+to ~/Documents/Forensic_Reports/ on local desktop.
 """
 
 from __future__ import annotations

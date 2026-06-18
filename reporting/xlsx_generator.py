@@ -1,6 +1,28 @@
 """
-XLSX Report Generator - Institutional-grade Excel workbook
+XLSX Report Generator — Institutional-grade Excel workbook
+===========================================================
 Tabs: Summary | Financials | Forensic Scores | Red Flags | Beneish | Altman | Peer | Charts
+
+References
+----------
+openpyxl (2010-2023). "openpyxl: A Python library to read/write Excel 2010
+    xlsx/xlsm/xltx/xltm files." openpyxl.readthedocs.io.
+    Core XLSX generation; cell formatting, charts, named ranges.
+
+Standards
+---------
+SEBI LODR Reg. 33 Financial Results Format — Quarterly results format used as
+    sheet template for income statement, balance sheet, cash flow tabs.
+Ind AS 1 / IAS 1: Presentation of Financial Statements — multi-year comparative
+    columns; at least 2 years of comparatives required.
+
+Role
+----
+Generates the machine-readable Excel workbook companion to the DOCX report.
+Sheets: Summary (risk score dashboard), Financial Statements (3-statement 5-year),
+Forensic Scores (Beneish/Dechow/Altman/Piotroski heatmap), Findings (all
+RED_FLAG/GREEN_FLAG rows), Audit Trail (log of all agent actions), Charts (risk
+score trend, component breakdown).
 """
 
 from __future__ import annotations

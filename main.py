@@ -1,11 +1,30 @@
 """
-FORENSIC AI - CLI Entry Point
+FORENSIC AI — CLI Entry Point
 ==============================
 Usage:
     python main.py "Infosys"
     python main.py "AAPL" "RELIANCE" "TCS"
     python main.py --company "Infosys" --years 7 --output /path/to/output
     python main.py --batch companies.txt
+
+References
+----------
+Ramirez, S. (2020-2023). "Typer: Build great CLIs. Easy to code. Based on Python
+    type hints." typer.tiangolo.com.
+    CLI framework for --company, --provider, --output-dir arguments.
+Williamson, W. (2020-2023). "Rich: Rich text and beautiful formatting in the
+    terminal." rich.readthedocs.io.
+    Progress bars, colored output, tables for terminal display.
+
+Role
+----
+Primary CLI entry point for the platform. Commands:
+  investigate --company "Infosys" [--provider groq] [--output-dir ./reports]
+      Runs full 17-agent investigation.
+  eval --company "Infosys"
+      Runs offline RAGAS evaluation.
+  version
+      Prints platform version.
 """
 
 import argparse

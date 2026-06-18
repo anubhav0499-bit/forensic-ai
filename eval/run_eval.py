@@ -1,6 +1,23 @@
 """
 RAG Evaluation Suite — Retrieval Quality Metrics
-Tests: Recall@K, Precision@K, MRR, NDCG, Hit Rate for BM25, Dense, and Hybrid retrievers.
+=================================================
+Tests: Recall@K, Precision@K, MRR, NDCG, Hit Rate for BM25, Dense, and Hybrid
+retrievers.
+
+References
+----------
+Es, S., James, J., Espinosa-Anke, L., & Schockaert, S. (2023). "RAGAS: Automated
+    Evaluation of Retrieval Augmented Generation." arXiv:2309.15217.
+    Offline evaluation runner for context_relevancy, faithfulness,
+    answer_relevancy, context_recall metrics.
+Liu, N. F., et al. (2023). "Lost in the Middle: How Language Models Use Long
+    Contexts." Transactions of the ACL (TACL) 2024.
+
+Role
+----
+Offline benchmarking script. Run as: python -m eval.run_eval --company Infosys
+NOT called from the production agent pipeline. Evaluates retrieval quality against
+CORPUS ground truth. Saves results to eval/results/{timestamp}.json.
 """
 
 import sys, os, time, math, tempfile, pathlib

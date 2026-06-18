@@ -1,5 +1,28 @@
 """
-Utility helpers - shared across all modules
+Utility Helpers — Shared across all modules
+============================================
+
+References
+----------
+Altman, E. I. (1968, 2000). "Financial Ratios, Discriminant Analysis and the
+    Prediction of Corporate Bankruptcy." Journal of Finance, 23(4), 589-609.
+    safe_divide() and classify_risk() used in all forensic score calculations to
+    handle zero-denominator edge cases.
+
+Standards
+---------
+ISA 520 / SA 520: Analytical Procedures — ratio calculations form the basis of
+    most analytical review techniques; safe_divide prevents false alerts from zero
+    denominators.
+
+Role
+----
+Shared utility functions called across all 17 agents and reporting modules.
+Functions: safe_divide(a, b, default=0.0) — division guard; classify_risk(score)
+→ {band, color, description} — maps 0-100 score to verdict band;
+format_currency(val, currency="INR") — INR/USD formatting with Cr/Bn suffixes;
+pct_change(old, new) → float — signed percentage change; winsorize(val, low, high)
+— outlier clamping for ratio calculations.
 """
 
 from __future__ import annotations

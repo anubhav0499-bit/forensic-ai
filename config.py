@@ -1,7 +1,33 @@
 """
-FORENSIC AI - Central Configuration
-====================================
+FORENSIC AI — Central Configuration
+=====================================
 All platform settings, model configs, thresholds, and paths.
+
+References
+----------
+Chaumont, S. (2013-2023). "python-dotenv: Read key-value pairs from a .env file
+    and set them as environment variables." pypi.org/project/python-dotenv/.
+    All API keys loaded from .env; never committed to version control.
+Xiao, S., et al. (2023). "C-Pack: Packaged Resources To Advance General Chinese
+    Embedding." arXiv:2309.07597.
+    BAAI/bge-large-en-v1.5 primary embedding (EMBEDDING_CONFIG.model_name).
+Altman, E. I. (1968, 2000). "Financial Ratios, Discriminant Analysis and the
+    Prediction of Corporate Bankruptcy." Journal of Finance.
+    RISK_SCORE_WEIGHTS maps to forensic model importance; fraud_indicators 0.25,
+    earnings_quality 0.20.
+
+Standards
+---------
+ISA 240 / PCAOB AS 2401 — FRAUD_DETECTION_THRESHOLDS and FRAUD_CASE_DATABASE
+    populated from audit standard risk factors.
+
+Role
+----
+Single source of truth for all platform configuration. Key config objects:
+LLMConfig (provider, model, temperature, max_tokens), EmbeddingConfig (model,
+device, batch_size), VectorDBConfig (persist_dir, n_results), AGENTIC_RAG_CONFIG
+(enabled, max_iterations), GUARDRAILS_CONFIG, STREAMING_CONFIG, RAGAS_CONFIG.
+All overridable via environment variables.
 """
 
 from __future__ import annotations
