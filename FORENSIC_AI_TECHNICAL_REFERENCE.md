@@ -4,12 +4,20 @@
 ---
 
 **Classification:** Internal — Restricted  
-**Version:** 1.4  
-**Platform:** Forensic AI v1.4  
+**Version:** 1.5  
+**Platform:** Forensic AI v1.5  
 **Maintained by:** Platform Owner  
 **Last Updated:** June 2026
 
-**v1.4 Changes (current) — 13 advanced RAG modules integrated; knowledge base; full technical references:**
+**v1.5 Changes (current) — RAG pipeline consolidation; technical references expanded to all 53 modules:**
+- `graph/nodes.py` (FIXED) — `retriever_node` now routes `vector_db` path through the `HybridRetriever` passed from `BaseForensicAgent` via `AgenticRAGState`. Eliminates the redundant LlamaIndex/ChromaDB connection and HyDE LLM call that ran on every agentic query. LlamaIndex retained as fallback for standalone use.
+- `graph/state.py` (ENHANCED) — Added `retriever: Any` field to `AgenticRAGState`; receives `HybridRetriever` instance from `base_agent._run_agentic_rag()`.
+- `agents/base_agent.py` (ENHANCED) — `_run_agentic_rag()` passes `retriever=self.retriever` into `run_agentic_rag()` initial state.
+- `graph/workflow.py` (ENHANCED) — `run_agentic_rag()` accepts optional `retriever=` parameter; injected into initial state.
+- `agents/orchestrator.py` (FIXED) — Docstring corrected to 17-Agent (was incorrectly 18-Agent).
+- Technical references (academic citations, audit standards, regulatory references) added to remaining 28 Python modules not covered in v1.4: all 10 agent files (`agent_03` through `agent_17`), `graph/nodes.py`, `graph/state.py`, `llm/langchain_client.py`, `llm/llm_manager.py`, `rag/vector_store.py`, `rag/bm25_retriever.py`, `database/` (3 files), `acquisition/` (5 files), `processing/` (3 files), `reporting/` (6 files), `utils/` (3 files), `eval/` (4 files), `main.py`, `app.py`, `config.py`, `agentic_rag/internet_search.py`, `forensics/working_capital_analysis.py`.
+
+**v1.4 Changes — 13 advanced RAG modules integrated; knowledge base; full technical references:**
 - `knowledge/forensic_knowledge.py` (NEW) — 5-layer Core Knowledge Base: global audit standards (ISA/PCAOB), Indian regulatory (SEBI LODR, CARO 2020, Companies Act), fraud case library (10 cases: Satyam, IL&FS, DHFL, Yes Bank, Enron, WorldCom, Wirecard, Luckin Coffee, Carillion, Steinhoff), financial statement intelligence, regulatory intelligence. Injected into every agent LLM call via `get_agent_knowledge_block(agent_id)`.
 - `rag/faiss_store.py` (NEW) — FAISS IndexFlatIP vector store (Johnson et al. 2019, IEEE Trans. Big Data); persists as `{company}.faiss` + `{company}_meta.pkl`; opt-in via `USE_FAISS=true`; 3–5× faster than ChromaDB for similarity queries.
 - `rag/multi_vector_retriever.py` (NEW) — Dual embeddings per chunk (raw content + LLM-generated 1-sentence summary); RRF merge (raw weight=0.6, summary weight=0.4); improves recall for gist-based queries.
@@ -1508,7 +1516,7 @@ Query
 | answer_relevancy | 25% | Cosine similarity between question and answer embeddings |
 | context_recall | 10% | Fraction of ground-truth sentences in retrieved context |
 
-### 17.7 Technical References (v1.4)
+### 17.7 Technical References (v1.5)
 
 | Component | Reference |
 |-----------|---------|
@@ -1525,7 +1533,7 @@ Query
 
 ---
 
-*End of Forensic AI Technical Reference Manual v1.4*
+*End of Forensic AI Technical Reference Manual v1.5*
 
 *This document is classified as Internal — Restricted. Distribution is limited to authorized analysts and reviewers. This platform produces research-grade output to assist human analysts; all findings must be reviewed by qualified professionals before being acted upon. This is not financial advice.*
 

@@ -63,7 +63,7 @@ Your input
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                         FORENSIC AI PLATFORM v1.4                        │
+│                         FORENSIC AI PLATFORM v1.5                        │
 ├──────────────┬───────────────┬───────────────────┬────────────────────────┤
 │  ACQUISITION │  PROCESSING   │     RAG LAYER     │   FORENSIC ENGINES     │
 │              │               │                   │                        │
@@ -182,7 +182,9 @@ Three-tier waterfall:
 ### 3.8 Query Rewriting — Agentic RAG (LangGraph)
 - 12-step LangGraph loop: `query_rewriter → detail_check → source_router →
   retriever → generator → relevance_check` (up to 3 iterations)
-- HyDE support in LlamaIndex pipeline (hypothetical document embedding)
+- **Vector DB path**: uses the already-initialised `HybridRetriever` (BM25 + FAISS + RRF)
+  passed from `BaseForensicAgent` — no redundant index connection, no extra LLM calls
+- **LlamaIndex / HyDE**: fallback only when no retriever is passed in state (standalone use)
 - Falls back to classic RAG if LangGraph unavailable; enable via `AGENTIC_RAG_ENABLED=true`
 
 ### 3.9 Conversation Memory
@@ -743,6 +745,42 @@ No. This platform produces research-grade output to assist human analysts. All f
 
 ---
 
-*Forensic AI v1.4 — For full technical documentation, see [FORENSIC_AI_TECHNICAL_REFERENCE.md](FORENSIC_AI_TECHNICAL_REFERENCE.md)*
+## 17. v1.5 Architecture Notes
+
+### What Changed in v1.5
+
+**RAG Pipeline Consolidation (from 3 stacks → 1 primary)**
+
+Prior to v1.5, the platform maintained three overlapping retrieval paths:
+
+| Path | Files | Status |
+|------|-------|--------|
+| Hybrid BM25+FAISS | `rag/hybrid_retriever.py` | **Primary (unchanged)** |
+| LlamaIndex/ChromaDB | `agentic_rag/rag_pipeline.py` | Fallback only |
+| LangGraph → LlamaIndex | `graph/nodes.py` | Fixed: now routes through HybridRetriever |
+
+The `retriever_node` in the LangGraph agentic pipeline previously created a new `LlamaIndexRAGPipeline` (and opened a second ChromaDB connection) on every invocation. In v1.5, `BaseForensicAgent` passes `self.retriever` (the already-initialised `HybridRetriever`) into the `AgenticRAGState`. `retriever_node` uses it directly for the `vector_db` path, eliminating:
+- Redundant ChromaDB connection on disk  
+- HyDE extra LLM call per query (was inside `LlamaIndexRAGPipeline._apply_hyde()`)
+- `llama-index` as a hard runtime dependency in the agentic path (now optional/fallback)
+
+LlamaIndex is retained as a fallback in `retriever_node` for cases where the retriever is not passed in state (e.g., calling `run_agentic_rag()` directly without going through `BaseForensicAgent`).
+
+**Technical References Added to All Modules**
+
+Every Python module now carries a structured docstring `References` block with:
+- Academic citations (author, year, journal, arXiv ID)
+- Applicable audit standards (ISA/SA/PCAOB clause numbers)
+- Indian regulatory references (SEBI LODR, Companies Act 2013, CARO 2020, IBC 2016)
+- Architecture description explaining each module's role in the pipeline
+
+This covers all 53 Python files across: `agents/`, `forensics/`, `rag/`, `graph/`, `llm/`, `eval/`, `database/`, `acquisition/`, `processing/`, `reporting/`, `utils/`, `agentic_rag/`, `knowledge/`, `api/`.
+
+**Agent Count Consistency**  
+All references in docstrings, README, and `FORENSIC_AI_TECHNICAL_REFERENCE.md` consistently use **17 specialist agents** (matching the numbered scheme where Agent 17 is the Chief Director; no Agent 18 exists).
+
+---
+
+*Forensic AI v1.5 — For full technical documentation, see [FORENSIC_AI_TECHNICAL_REFERENCE.md](FORENSIC_AI_TECHNICAL_REFERENCE.md)*
 
 *Repository: [github.com/anubhav0499-bit/forensic-ai](https://github.com/anubhav0499-bit/forensic-ai)*
