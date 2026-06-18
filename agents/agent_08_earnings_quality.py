@@ -3,6 +3,53 @@ Agent 8 — Earnings Quality Agent
 ==================================
 Evaluates earnings sustainability: accruals, tax rate consistency,
 non-GAAP gap analysis, one-time item patterns, and revenue recognition.
+
+References
+----------
+Sloan, R. G. (1996). "Do Stock Prices Fully Reflect Information in Accruals and Cash
+    Flows about Future Earnings?" The Accounting Review, 71(3), 289-315.
+    Accrual ratio = (NI - CFO) / Average Total Assets; >10% = CRITICAL earnings
+    quality concern; foundational metric for this agent.
+
+Dechow, P. M., & Dichev, I. D. (2002). "The Quality of Accruals and Earnings: The
+    Role of Accrual Estimation Errors." The Accounting Review, 77 (Suppl.), 35-59.
+    Accrual quality deteriorates when estimation uncertainty increases; high accrual
+    volatility signals lower earnings persistence.
+
+Richardson, S. A., Sloan, R. G., Soliman, M. T., & Tuna, I. (2005). "Accrual
+    Reliability, Earnings Persistence and Stock Prices." Journal of Accounting &
+    Economics, 39(3), 437-485.
+    RSST accrual decomposition into working capital, non-current operating, and
+    financing components for granular earnings quality assessment.
+
+Lev, B., & Thiagarajan, S. R. (1993). "Fundamental Information Analysis." Journal of
+    Accounting Research, 31(2), 190-215.
+    12 fundamental signals including inventory and receivables trends as earnings
+    quality indicators; non-cash income analysis basis.
+
+Audit Standards
+---------------
+ISA 315 §A42 — Identifying and Assessing the Risks of Material Misstatement
+    Unexpected changes in ratio analysis, particularly unexpected accrual increases,
+    are risk indicators requiring further audit procedures.
+
+Regulatory Framework
+--------------------
+Ind AS 12 / IAS 12 — Income Taxes
+    Deferred tax accounting; persistent effective tax rate (ETR) significantly below
+    the statutory rate (25.168% for Indian companies) may signal earnings management
+    via deferred tax asset over-recognition.
+
+SEBI LODR Regulation 33
+    Requirement to reconcile GAAP to non-GAAP metrics in financial disclosures;
+    excessive non-GAAP adjustments signal earnings quality concerns.
+
+Implemented Checks
+------------------
+Accrual ratio trend (3-year rolling), EBITDA-to-OCF conversion (<60% = elevated
+earnings quality risk), non-cash income as percentage of PAT, effective tax rate
+versus statutory rate divergence, non-GAAP to GAAP gap analysis (>20% gap =
+HIGH concern), and one-time item recurrence frequency.
 """
 
 from __future__ import annotations

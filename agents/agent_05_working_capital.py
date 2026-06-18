@@ -3,6 +3,47 @@ Agent 5 — Working Capital Forensics Agent
 ==========================================
 Full DSO / DIO / DPO / CCC analysis with multi-year trend detection.
 Flags: channel stuffing, inventory inflation, payable stretching.
+
+References
+----------
+Beneish, M. D. (1999). "The Detection of Earnings Manipulation." Financial Analysts
+    Journal, 55(5), 24-36.
+    Days Sales Index (DSI) = (Inv_t/Sales_t)/(Inv_{t-1}/Sales_{t-1}); threshold
+    >1.465 signals inventory build-up relative to sales. Depreciation Index
+    (DEPI) = (Dep/{Dep+PPE})_{t-1}/(Dep/{Dep+PPE})_t; threshold >1.083 signals
+    asset life extension to boost earnings.
+
+Penman, S. H. (2012). "Financial Statement Analysis and Security Valuation." 5th ed.
+    McGraw-Hill.
+    Cash Conversion Cycle (CCC) = DSO + DIO - DPO as the primary working capital
+    efficiency metric; CCC elongation signals deteriorating operational quality.
+
+Audit Standards
+---------------
+ISA 520 / SA 520 / PCAOB AS 2305 — Analytical Procedures
+    Working capital ratio trends compared to prior periods and industry benchmarks;
+    unexpected deviations from historical patterns are a substantive audit procedure.
+
+Regulatory Framework
+--------------------
+Ind AS 2 / IAS 2 (IASB) — Inventories
+    Inventory valuation at lower of cost and net realisable value; DIO expansion
+    without corresponding revenue growth triggers NRV write-down assessment.
+
+SEBI LODR Regulation 33
+    Quarterly financial results disclosure; working capital ratios derivable from
+    filed results and compared against disclosed policies.
+
+CARO 2020 Para 3(ii)(a) — Companies (Auditor's Report) Order 2020
+    Auditor report on physical verification of inventory; any divergence between
+    physical stock and book records is a mandatory disclosure item.
+
+Implemented Checks
+------------------
+DSO expansion (>20 days YoY = red flag for channel stuffing), DIO expansion
+(>15 days YoY = inventory inflation risk), CCC elongation trend, DPO compression
+(supplier payment acceleration = potential liquidity stress), and DEPI manipulation
+signal per Beneish methodology.
 """
 
 from __future__ import annotations

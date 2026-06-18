@@ -1,8 +1,55 @@
 """
-Agent 17 - Chief Investigation Director
+Agent 17 — Chief Investigation Director
 =========================================
 Aggregates all agent findings, resolves conflicts, generates final verdict.
 This is the investment committee chairperson.
+
+References
+----------
+Park, J. S., O'Brien, J., Cai, C. J., Morris, M. R., Liang, P., & Bernstein, M. S.
+    (2023). "Generative Agents: Interactive Simulacra of Human Behavior." UIST 2023.
+    Multi-agent state sharing pattern — Director receives all prior phase outputs
+    and synthesizes them into a coherent final assessment.
+
+Li, G., Hammoud, H. A. A. K., Itani, H., Khizbullin, D., & Salim, B. (2023).
+    "MetaGPT: Meta Programming for a Multi-Agent Collaborative Framework."
+    ICLR 2024.
+    Structured role-based synthesis from specialist sub-agents; Director implements
+    the orchestrator role receiving structured outputs from all domain agents.
+
+Penman, S. H. (2012). "Financial Statement Analysis and Security Valuation." 5th ed.
+    McGraw-Hill.
+    Multi-dimensional financial analysis synthesis framework; qualitative and
+    quantitative evidence integration methodology for final risk verdicts.
+
+Audit Standards
+---------------
+ISA 315 (Revised 2019) — Identifying and Assessing the Risks of Material Misstatement
+    §A200: Synthesis of evidence from all audit procedures into an overall risk
+    assessment; Director agent implements analogous evidence aggregation.
+
+ISA 240 — The Auditor's Responsibilities Relating to Fraud
+    Overall fraud risk conclusion after aggregating all risk factors from specialist
+    areas (revenue, cash flow, related parties, auditor intelligence, NLP signals).
+
+PCAOB AS 2101 — Audit Planning
+    Overall audit strategy and engagement partner final sign-off analogy; Director
+    role mirrors the engagement partner's synthesis responsibility at conclusion.
+
+Regulatory Framework
+--------------------
+SEBI LODR Regulation 17 — Corporate Governance Requirements
+    Board and Audit Committee responsibilities for overall risk oversight; Director
+    agent is analogous to the Board Audit Committee chair synthesising risk inputs
+    from all management and auditor sources.
+
+Implemented Checks
+------------------
+Phase D synthesis (resolves conflicts between agents using weighted evidence),
+ambiguity loop (re-runs targeted sub-agents if composite score falls in 38-62
+grey zone), final verdict from 6-band classification (STRONG AVOID / AVOID /
+CAUTION / MONITOR / CAUTIOUS BUY / BUY), and composite 0-100 risk score derived
+from weighted combination of all 16 specialist agent scores.
 """
 
 from __future__ import annotations

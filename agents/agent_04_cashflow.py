@@ -3,6 +3,45 @@ Agent 4 — Cash Flow Forensics Agent
 =====================================
 Investigates CFO quality, FCF sustainability, CapEx patterns,
 and cash-to-earnings divergence using quantitative engines.
+
+References
+----------
+Sloan, R. G. (1996). "Do Stock Prices Fully Reflect Information in Accruals and Cash
+    Flows about Future Earnings?" The Accounting Review, 71(3), 289-315.
+    CF accrual ratio = (NI - OCF) / Average Total Assets; >0.10 = CRITICAL. Foundation
+    for distinguishing cash-backed from accrual-backed earnings.
+
+Richardson, S. A., Sloan, R. G., Soliman, M. T., & Tuna, I. (2005). "Accrual
+    Reliability, Earnings Persistence and Stock Prices." Journal of Accounting &
+    Economics, 39(3), 437-485.
+    RSST extension: all balance-sheet accruals decomposed into working capital,
+    non-current operating, and financing components.
+
+Mulford, C. W., & Comiskey, E. E. (2002). "The Financial Numbers Game: Detecting
+    Creative Accounting Practices." Wiley.
+    CapEx/opex misclassification patterns and their cash flow statement impact.
+
+Audit Standards
+---------------
+PCAOB AS 2401 §A.29-A.32 — Consideration of Fraud in a Financial Statement Audit
+    Cash flow manipulation via fictitious OCF — inter-company loans, factoring AR
+    without recourse, stretching AP — all reduce OCF quality.
+
+ISA 315 §A42 — Identifying and Assessing the Risks of Material Misstatement
+    Analytical procedures on cash flow statements as a primary fraud detection
+    technique; unexpected OCF/NI divergence triggers further investigation.
+
+Regulatory Framework
+--------------------
+CARO 2020 Para 3(xiv) — Companies (Auditor's Report) Order 2020
+    Auditor required to comment on whether the company has incurred cash losses
+    in the current and immediately preceding financial year.
+
+Implemented Checks
+------------------
+OCF/EBITDA conversion ratio (<60% sustained over 3 years = red flag), FCF negativity
+(3+ consecutive years), financing-CF dependency ratio, CapEx-to-D&A ratio (>2x
+sustained = possible aggressive capitalisation), and Sloan accrual ratio trend.
 """
 
 from __future__ import annotations

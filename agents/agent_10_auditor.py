@@ -5,6 +5,61 @@ Analyzes: auditor identity, tenure, key audit matters (KAMs),
 going concern opinions, internal control weaknesses, restatements,
 non-audit fee independence risk.
 Frameworks: ISA 240 §A50 / PCAOB AS 2101 / PCAOB Rule 3521 / ISA 570 / ISA 705.
+
+References
+----------
+Francis, J. R. (2004). "What Do We Know About Audit Quality?" The British Accounting
+    Review, 36(4), 345-368.
+    Audit quality differences by firm size (Big 4 vs. non-Big 4); Big 4 firms
+    provide higher audit quality due to reputational capital and specialisation.
+
+Audit Standards
+---------------
+ISA 240 §A50 / SA 240 — The Auditor's Responsibilities Relating to Fraud
+    Auditor independence threats — when management pressures auditors or limits
+    audit scope = heightened fraud risk signal.
+
+ISA 570 / SA 570 — Going Concern
+    Auditor's assessment of going concern; Emphasis of Matter paragraph required
+    when material uncertainty exists; flagged by this agent as HIGH risk signal.
+
+ISA 705 / SA 705 — Modifications to the Opinion in the Independent Auditor's Report
+    Qualified, adverse, and disclaimer of opinion types; each modification coded
+    as a distinct risk severity level in this agent's output.
+
+ISA 260 / SA 260 — Communication with Those Charged with Governance
+    Key Audit Matters (KAMs) introduced under ISA 701 (2016); KAM count and topic
+    clustering used as proxy for audit complexity and risk areas.
+
+PCAOB AS 2101 — Audit Planning
+    Risk-based audit approach; material weakness in internal controls identified
+    during planning or execution is a significant fraud risk indicator.
+
+PCAOB Rule 3521 — Contingent Fee Arrangements
+    Contingent fee arrangements impair auditor independence; non-audit fee ratio
+    (non-audit fees / total fees) >30% flagged as independence risk.
+
+PCAOB AS 3101 — The Auditor's Report on an Audit of Financial Statements
+    Critical Audit Matters (CAMs) disclosure requirements for large accelerated
+    filers; topic analysis identifies high-risk areas management is managing.
+
+Regulatory Framework
+--------------------
+Companies Act 2013 §143(12)
+    Auditor's statutory duty to report fraud to the Central Government; failure
+    to report constitutes a separate legal violation.
+
+CARO 2020 — Companies (Auditor's Report) Order 2020
+    21 mandatory items in auditor's report for eligible Indian companies; coverage
+    includes fraud, NPA classification, and net worth erosion commentary.
+
+Implemented Checks
+------------------
+Auditor identity classification (Big 4 / mid-tier / small firm), tenure tracking
+(>10 years same auditor = independence concern), Big 4 downgrade detection (downgrade
+to smaller firm = red flag), going concern Emphasis of Matter paragraph, qualified
+or adverse opinion flagging, non-audit fee independence ratio, KAM count and
+topic-cluster analysis, and restatement history.
 """
 
 from __future__ import annotations

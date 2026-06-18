@@ -1,8 +1,55 @@
 """
-Agent 11 - Management NLP Agent
+Agent 11 — Management NLP Agent
 =================================
 Analyzes: MD&A, Earnings Calls, Shareholder Letters
 Detects: Evasive language, over-optimism, narrative inconsistencies
+
+References
+----------
+Li, F. (2010). "The Information Content of Forward-Looking Statements in Corporate
+    Filings — A Naive Bayesian Machine Learning Approach." Journal of Accounting
+    Research, 48(5), 1049-1102.
+    Textual analysis of MD&A for earnings persistence; forward-looking statement
+    positivity as a predictor of future financial performance.
+
+Larcker, D. F., & Zakolyukina, A. A. (2012). "Detecting Deceptive Discussions in
+    Conference Calls." Journal of Accounting Research, 50(2), 495-540.
+    Linguistic cues in earnings call transcripts predicting subsequent restatements;
+    deception indicators include hedging, cognitive complexity, and self-references.
+
+Loughran, T., & McDonald, B. (2011). "When Is a Liability Not a Liability? Textual
+    Analysis, Dictionaries, and 10-Ks." Journal of Finance, 66(1), 35-65.
+    Finance-specific sentiment dictionary; negative word frequency as an independent
+    risk signal; basis for UNCERTAINTY_WORDS and EVASION_WORDS word lists.
+
+Huang, A. H., Zang, A. Y., & Zheng, R. (2014). "Evidence on the Information Content
+    of Text in Analyst Reports." The Accounting Review, 89(6), 2151-2180.
+    Qualitative disclosure quality scoring methodology adapted for MD&A analysis
+    in this agent.
+
+Audit Standards
+---------------
+ISA 240 §A4 — The Auditor's Responsibilities Relating to Fraud
+    Management override risk — tone at the top; management reluctance to acknowledge
+    deficiencies in disclosures is a fraud risk indicator.
+
+ISA 240 §A1-A6 — Fraud Risk Factors Related to Management Characteristics
+    Incentives, rationalizations, and management attitudes toward internal controls;
+    NLP analysis of disclosures operationalises these qualitative indicators.
+
+Regulatory Framework
+--------------------
+SEBI LODR Regulation 33 / Regulation 30
+    Management Discussion & Analysis (MD&A) is a mandatory disclosure component;
+    material inconsistencies between MD&A narrative and financial data are reportable.
+
+Implemented Checks
+------------------
+Evasion word frequency scoring (vague/uncertainty language density), over-optimism
+indicator scoring (positive forward-looking language without substantiation),
+guidance accuracy tracking (management guidance vs. actual outcomes), non-GAAP
+overemphasis detection (non-GAAP mentions > GAAP mentions), and MD&A narrative
+consistency analysis across consecutive annual reports.
 """
 
 from __future__ import annotations

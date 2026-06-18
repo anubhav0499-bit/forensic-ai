@@ -4,6 +4,56 @@ Agent 9 — Related Party Forensics Agent
 Detects: self-dealing, promoter loans, RPT revenue inflation, disclosure opacity,
 director remuneration misalignment, inter-company guarantees, tunnelling patterns.
 Frameworks: SEBI RPT Regulations 2021 / OECD Corporate Governance Principles (2023) / ISA 550.
+
+References
+----------
+Johnson, S., La Porta, R., Lopez-de-Silanes, F., & Shleifer, A. (2000). "Tunneling."
+    American Economic Review Papers & Proceedings, 90(2), 22-27.
+    Academic framework for inter-company value extraction (tunnelling); establishes
+    theoretical basis for RPT-to-revenue ratio and promoter loan detection.
+
+OECD (2023). "G20/OECD Principles of Corporate Governance."
+    Principle VI-C: Disclosure of material related-party transactions and independent
+    director oversight; benchmarks for RPT governance quality scoring.
+
+Audit Standards
+---------------
+ISA 550 / SA 550 — Related Parties
+    Auditor identification of undisclosed related parties; fraud risk factor when
+    management restricts access to RPT documentation or denies related-party
+    relationships that the auditor has evidence of.
+
+Regulatory Framework
+--------------------
+SEBI (Related Party Transactions) Regulations 2021
+    Prior approval required for all material RPTs (>Rs 1,000 Cr or 10% of annual
+    consolidated turnover); no vote from interested parties; omnibus approval
+    limits tightened.
+
+SEBI LODR Regulation 23 — Listing Obligations and Disclosure Requirements
+    Audit committee approval required for all RPTs; material RPT defined as >10%
+    of annual consolidated turnover; quarterly RPT disclosure obligation.
+
+Companies Act 2013 §177
+    Audit committee mandate to review and approve RPTs above the materiality
+    threshold before execution; committee must have majority independent directors.
+
+Companies Act 2013 §188
+    Prior approval of Board (and shareholders for listed entities) required for
+    certain RPTs including sales/purchase of goods, lease of property, and
+    transactions with directors or their relatives.
+
+Ind AS 24 / IAS 24 (IASB) — Related Party Disclosures
+    Disclosure requirements for key management personnel compensation, transactions
+    with entities controlled by promoters, and outstanding balances.
+
+Implemented Checks
+------------------
+RPT-to-revenue ratio (>15% = elevated concern), promoter loan outstanding trend,
+inter-company guarantee-to-net-worth ratio, director remuneration as percentage of
+PAT (>5% = misalignment signal), undisclosed RPT NLP signals in notes to accounts,
+and tunnelling pattern detection (loans to promoter entities + high dividend
+payouts + related-party asset purchases).
 """
 
 from __future__ import annotations

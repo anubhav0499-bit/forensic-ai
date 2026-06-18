@@ -1,8 +1,64 @@
 """
-Agent 6 - Fraud Detection Agent
+Agent 6 — Fraud Detection Agent
 ================================
 Calculates: Beneish M-Score, Dechow F-Score, Piotroski F-Score, Accrual Analysis
 Compares with known fraud case signatures.
+
+References
+----------
+Beneish, M. D. (1999). "The Detection of Earnings Manipulation." Financial Analysts
+    Journal, 55(5), 24-36.
+    8-variable M-Score model; M > -1.78 = HIGH manipulation probability. Core
+    detection model for this agent.
+
+Beneish, M. D. (1997). "Detecting GAAP Violation: Implications for Assessing Earnings
+    Management among Firms with Extreme Financial Performance." Journal of Accounting
+    and Public Policy, 16(3), 271-309.
+    Empirical validation of M-Score across 2,000+ firms; establishes statistical
+    thresholds used in fraud probability classification.
+
+Dechow, P. M., Ge, W., Larson, C. R., & Sloan, R. G. (2011). "Predicting Material
+    Accounting Misstatements." Contemporary Accounting Research, 28(1), 17-82.
+    F-Score logistic regression model; threshold >0.025 = probable misstatement.
+    Complements M-Score with different variable set.
+
+Altman, E. I. (1968). "Financial Ratios, Discriminant Analysis and the Prediction of
+    Corporate Bankruptcy." Journal of Finance, 23(4), 589-609.
+    Original Z-Score for manufacturing; Z < 1.81 = distress zone.
+
+Altman, E. I. (2000). "Predicting Financial Distress of Companies: Revisiting the
+    Z-Score and ZETA Models." Working Paper, NYU Stern.
+    EM variant for non-manufacturing / emerging market companies; Z < 1.10 = distress.
+
+Piotroski, J. D. (2000). "Value Investing: The Use of Historical Financial Statement
+    Information to Separate Winners from Losers." Journal of Accounting Research,
+    38 (Suppl.), 1-41.
+    F-Score: 9 binary criteria across profitability, leverage, and efficiency;
+    score <= 3 = financially distressed; score >= 8 = financially strong.
+
+Audit Standards
+---------------
+ISA 240 / SA 240 — The Auditor's Responsibilities Relating to Fraud
+    Fraud Triangle framework (pressure, opportunity, rationalization); auditor
+    required to assess risk of material misstatement due to fraud at planning stage.
+
+PCAOB AS 2401 §66 — Consideration of Fraud in a Financial Statement Audit
+    Quantitative fraud risk factors including unusual financial ratio changes and
+    accounting policy switches — directly mapped to M-Score and F-Score variables.
+
+Regulatory Framework
+--------------------
+CARO 2020 Para 3(xi) — Companies (Auditor's Report) Order 2020
+    Any fraud in or on the company, or by the company or its officers or employees,
+    must be reported; fraud case comparison provides benchmark signatures.
+
+Implemented Models
+------------------
+Beneish M-Score (8-variable), Dechow F-Score (logistic regression), Altman Z-Score
+(EM variant for non-manufacturing), Piotroski F-Score (9-point binary), Sloan CF
+accrual ratio, and fraud case comparison against 10 documented cases: Satyam,
+IL&FS, DHFL, Yes Bank, Enron, WorldCom, Wirecard, Luckin Coffee, Carillion,
+and Steinhoff.
 """
 
 from __future__ import annotations

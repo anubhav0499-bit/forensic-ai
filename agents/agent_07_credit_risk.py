@@ -4,6 +4,57 @@ Agent 7 — Credit Risk Assessment Agent
 Computes leverage, coverage, and liquidity ratios.
 Maps to Altman EM Z-Score (non-manufacturing) and CRISIL credit metrics.
 Frameworks: Altman EM (2000), CRISIL/ICRA methodology, ISA 570 Going Concern.
+
+References
+----------
+Altman, E. I. (1968). "Financial Ratios, Discriminant Analysis and the Prediction of
+    Corporate Bankruptcy." Journal of Finance, 23(4), 589-609.
+    Original five-variable Z-Score discriminant model for credit risk assessment.
+
+Altman, E. I. (2000). "Predicting Financial Distress of Companies: Revisiting the
+    Z-Score and ZETA Models." Working Paper, NYU Stern.
+    EM variant adapted for non-manufacturing and emerging market companies; Z < 1.10
+    = distress zone, 1.10-2.60 = grey zone, >2.60 = safe zone.
+
+Altman, E. I., Haldeman, R. G., & Narayanan, P. (1977). "ZETA Analysis: A New Model
+    to Identify Bankruptcy Risk of Corporations." Journal of Banking and Finance,
+    1(1), 29-54.
+    ZETA credit scoring methodology for distress prediction, extended to 7 variables.
+
+Audit Standards
+---------------
+ISA 570 / SA 570 — Going Concern
+    Auditor's responsibility to assess whether a material uncertainty exists about
+    the entity's ability to continue as a going concern; this agent's ICR and
+    Net Debt/EBITDA thresholds serve as quantitative triggers.
+
+Regulatory Framework
+--------------------
+CRISIL Rating Methodology (2023)
+    Interest coverage <1.5x = CRITICAL; Debt/EBITDA >4x = leveraged company
+    classification; current ratio and liquidity metrics calibrated to CRISIL
+    published thresholds.
+
+Insolvency and Bankruptcy Code 2016 (IBC)
+    Operational creditor default >21 days; financial creditor default >1 day =
+    trigger for National Company Law Tribunal (NCLT) proceedings; debt rollover
+    risk flags pre-IBC stress signals.
+
+CARO 2020 Para 3(xii) — Companies (Auditor's Report) Order 2020
+    Auditor mandatory commentary on net worth erosion and whether any lender has
+    declared the company a Non-Performing Asset (NPA).
+
+RBI Master Circular on Prudential Norms (2018)
+    NPA classification stages: SMA-0 (<30 days overdue), SMA-1 (31-60 days),
+    SMA-2 (61-90 days), NPA (>90 days) — short-term debt rollover risk maps to
+    early SMA stage indicators.
+
+Implemented Checks
+------------------
+Interest Coverage Ratio (CRITICAL <1.5x, HIGH <2.5x, MODERATE <4.0x), Debt/Equity
+thresholds, Net Debt/EBITDA (>4x = leveraged), short-term debt rollover risk (>60%
+of total debt = HIGH risk), and Altman EM Z-Score calculation with implied credit
+rating mapping (AAA through D equivalent bands).
 """
 
 from __future__ import annotations

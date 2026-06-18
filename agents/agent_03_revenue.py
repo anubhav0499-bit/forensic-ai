@@ -3,6 +3,52 @@ Agent 3 — Revenue Forensics Agent
 ==================================
 Detects: channel stuffing, premature recognition, deferred-revenue pull-forward,
 AR/revenue divergence, Q4 skew, fictitious revenue signals.
+
+References
+----------
+Dechow, P. M., Ge, W., Larson, C. R., & Sloan, R. G. (2011). "Predicting Material
+    Accounting Misstatements." Contemporary Accounting Research, 28(1), 17-82.
+    Revenue DSRI component of F-Score used in this agent's AR-to-revenue divergence
+    detection logic.
+
+Beneish, M. D. (1999). "The Detection of Earnings Manipulation." Financial Analysts
+    Journal, 55(5), 24-36.
+    Days Sales Receivables Index (DSRI) = (Rec_t/Rev_t)/(Rec_{t-1}/Rev_{t-1});
+    threshold >1.465 signals probable revenue manipulation.
+
+Audit Standards
+---------------
+SEC Staff Accounting Bulletin No. 104 (Topic 13) — Revenue Recognition
+    Criteria for revenue recognition: persuasive evidence of arrangement, delivery
+    has occurred, fixed or determinable price, and collectability is reasonably
+    assured. Basis for premature recognition detection.
+
+ISA 240 / SA 240 §26 — The Auditor's Responsibilities Relating to Fraud
+    "Revenue recognition is the most prevalent fraud risk area." Premature
+    recognition is identified as the most common manipulation technique; this
+    agent operationalises §26 analytically.
+
+PCAOB AS 2401 (AU-C 240) §66 — Consideration of Fraud in a Financial Statement Audit
+    Revenue fraud indicators include unusual channel arrangements, related-party
+    revenue, and bill-and-hold transactions — all flagged by this agent.
+
+Regulatory Framework
+--------------------
+SEBI LODR Regulation 33
+    Listed companies must disclose revenue recognition policies in quarterly and
+    annual financial results; deviations from disclosed policy are a red flag.
+
+Ind AS 115 / IFRS 15 (IASB 2014) — Revenue from Contracts with Customers
+    The 5-step revenue recognition model (identify contract, identify obligations,
+    determine transaction price, allocate, recognise) is the core standard for
+    India-listed companies; deferred revenue pull-forward violates step 5.
+
+Implemented Checks
+------------------
+AR-to-revenue divergence (DSO trend expansion >20 days YoY), Q4 revenue skew
+(>35% of annual revenue = channel stuffing signal), deferred revenue year-on-year
+shrinkage relative to revenue growth, revenue/EBIT divergence (revenue rising
+while EBIT margin compresses), and DSRI calculation vs. Beneish threshold.
 """
 
 from __future__ import annotations
