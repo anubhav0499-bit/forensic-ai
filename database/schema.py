@@ -1,5 +1,32 @@
 """
 Database Schema Definitions
+============================
+
+References
+----------
+SQLite Documentation (2023). sqlite.org/docs.html.
+    Schema design for transaction-safe investigation data persistence.
+
+Standards / Specifications
+--------------------------
+ISA 230 / SA 230 — Audit Documentation: complete record-keeping of all
+    investigation steps; this schema implements digital audit trail
+    requirements.
+SEBI LODR Regulation 4(2)(f) — Preservation of books of accounts and records
+    for a minimum of 5 years.
+
+Architecture / Data Flow
+------------------------
+Defines all SQLite table DDL consumed by SQLiteHandler._initialize().
+Schema tables:
+  - companies       : investigation metadata (ticker, ISIN, exchange, sector)
+  - agents          : agent run records
+  - findings        : RED_FLAG / GREEN_FLAG / OBSERVATION per agent
+  - audit_trail     : every action logged with timestamp (digital audit trail)
+  - documents       : acquired document metadata with SHA-256 content hash
+  - risk_scores     : aggregate risk score per company per fiscal year
+  - financial_data  : full income-statement / balance-sheet / cash-flow history
+  - forensic_scores : Beneish M-Score, Altman Z-Score, Piotroski F-Score
 """
 
 SCHEMA_SQL = """

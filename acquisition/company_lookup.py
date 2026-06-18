@@ -1,5 +1,35 @@
 """
-Company Lookup - Identifies exchange, ticker, ISIN and market for any company
+Company Lookup — Identifies Exchange, Ticker, ISIN and Market for Any Company
+==============================================================================
+
+References
+----------
+NSE India (2023). nseindia.com — National Stock Exchange.
+    GET /api/quote-equity?symbol=INFY returns company profile, ISIN,
+    market cap.
+BSE India (2023). bseindia.com — Bombay Stock Exchange.
+    Scrip search by company name returns BSE scrip code.
+SEC EDGAR (2024). sec.gov/cgi-bin/browse-edgar — Full-text company search.
+    CIK number required for downstream filing retrieval.
+Yahoo Finance (2023). pypi.org/project/yfinance/ — Global ticker lookup;
+    market cap, exchange, sector metadata across all major markets.
+
+Standards / Specifications
+--------------------------
+SEBI LODR Regulation 30 — Listed companies must file identity disclosures
+    (ISIN, exchange membership) with exchanges; this module resolves those
+    identifiers for any input company name or ticker.
+
+Architecture / Data Flow
+------------------------
+Produces a CompanyProfile dataclass with company_name, exchange, ticker, isin,
+country, sector, market_cap, cik, nse_symbol, bse_code.  Lookup cascade:
+  (1) SEC EDGAR by ticker (US short codes)
+  (2) Yahoo Finance search (global fallback)
+  (3) NSE autocomplete API (Indian companies)
+  (4) SEC EDGAR full-text search by name
+Result is cached in-memory for the session lifetime.
+
 Supports: NSE/BSE (India), SEC EDGAR (US), Yahoo Finance (global)
 """
 

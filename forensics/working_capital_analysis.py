@@ -1,5 +1,38 @@
 """
-Working Capital Analysis - Inventory, Receivables, Payables Forensics
+Working Capital Analysis — Inventory, Receivables, Payables Forensics
+=======================================================================
+
+References
+----------
+Beneish, M. D. (1999). "The Detection of Earnings Manipulation."
+    Financial Analysts Journal, 55(5), 24-36.
+    Days Sales Index (DSI) = (Inv_t/Sales_t) / (Inv_{t-1}/Sales_{t-1});
+    threshold > 1.465 signals potential manipulation.
+    Depreciation Index (DEPI) = (Dep/{Dep+PPE})_{t-1} / (Dep/{Dep+PPE})_t;
+    threshold > 1.083 signals asset inflation.
+Penman, S. H. (2012). "Financial Statement Analysis and Security Valuation."
+    5th ed. McGraw-Hill.
+    CCC = DSO + DIO - DPO as the operational cash conversion efficiency measure.
+
+Standards / Specifications
+--------------------------
+ISA 315 §A42 — Unexpected working capital changes in ratio analysis constitute
+    an inherent risk indicator requiring elevated audit scrutiny.
+Ind AS 2 / IAS 2 (IASB) — Inventory valuation at lower of cost and NRV;
+    DIO expansion signals potential avoidance of NRV write-downs.
+CARO 2020 Para 3(ii)(a) — Auditor must report on physical verification of
+    inventory and material discrepancies found.
+
+Architecture / Data Flow
+------------------------
+Computed metrics:
+  DSO = (AR / Revenue) × 365        — days to collect receivables
+  DIO = (Inventory / COGS) × 365    — days inventory held
+  DPO = (AP / COGS) × 365           — days to pay suppliers
+  CCC = DSO + DIO - DPO             — net cash conversion cycle
+Multi-year trend: rising CCC indicates deteriorating working capital efficiency.
+Red flags: DSO spike (channel stuffing), inventory inflation vs revenue growth,
+payable stretching (liquidity stress), CCC deterioration.
 """
 
 from __future__ import annotations

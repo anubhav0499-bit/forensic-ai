@@ -1,6 +1,32 @@
 """
-Document Downloader - Orchestrates document acquisition from all sources
-Handles deduplication, checksums, and local caching
+Document Downloader — Orchestrates Document Acquisition from All Sources
+=========================================================================
+
+References
+----------
+SEBI LODR Regulation 46 — Mandatory website disclosure: annual reports,
+    shareholding patterns, and financial results must be publicly accessible
+    on the company's website and exchange portals.
+SEC Rule 17a-5 (EDGAR) — Electronic filing mandatory for US-listed companies;
+    machine-readable XBRL-tagged financials since 2009.
+Loughran, T., & McDonald, B. (2016). "Textual Analysis in Accounting and
+    Finance: A Survey." Journal of Accounting Research, 54(4), 1187-1230.
+    Document acquisition pipeline enables downstream textual analysis of
+    annual reports, MD&A sections, and conference call transcripts.
+
+Architecture / Data Flow
+------------------------
+Priority-ordered acquisition cascade:
+  (1) Company IR page (IRScraper)
+  (2) Stock exchange filings — NSE / BSE / EDGAR (IndiaMarketsClient /
+      SECEdgarClient)
+  (3) Regulatory databases — SEBI / RBI
+  (4) Rating agencies — CRISIL / ICRA / CARE
+  (5) Web search fallback
+Deduplication is performed by SHA-256 content hash before DB registration.
+Local cache stored at data/documents/{company_slug}/.
+
+Handles deduplication, checksums, and local caching.
 """
 
 from __future__ import annotations

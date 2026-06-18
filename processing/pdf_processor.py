@@ -1,5 +1,30 @@
 """
-PDF Processor - Extracts text and structure from financial documents
+PDF Processor — Extracts Text and Structure from Financial Documents
+====================================================================
+
+References
+----------
+Artifex Software (2006-2023). "PyMuPDF (fitz)." pymupdf.readthedocs.io.
+    Fast native PDF text extraction; preserves layout and font metadata;
+    best performance on born-digital annual report PDFs.
+Kluyver, T., et al. (2022). "pdfplumber." github.com/jsvine/pdfplumber.
+    Accurate text extraction with character / word / line bounding boxes;
+    better for complex multi-column layouts and scanned-quality PDFs.
+Smith, R. (2007). "An Overview of the Tesseract OCR Engine." ICDAR 2007.
+    Tesseract v5 — primary OCR engine for image-PDF annual reports.
+EasyOCR (JaidedAI, 2020). github.com/JaidedAI/EasyOCR.
+    Secondary OCR fallback; better on mixed-language (English + Hindi)
+    Indian annual reports where Tesseract accuracy degrades.
+
+Architecture / Data Flow
+------------------------
+Extraction cascade logic:
+  (1) PyMuPDF  — fast; best for born-digital PDFs (confidence > 0.7 → return)
+  (2) pdfplumber — fallback for complex layouts (confidence > 0.5 → return)
+  (3) OCR: Tesseract → EasyOCR — final fallback for scanned documents
+Output: ParsedDocument with list of {page_num, text, tables} per page plus
+aggregate word_count, tables_found, extraction_method, and confidence score.
+
 Cascade: PyMuPDF → pdfplumber → OCR (Tesseract/EasyOCR)
 """
 

@@ -1,6 +1,36 @@
 """
-IR Website Scraper — scrapes company Investor Relations pages for annual
-reports, earnings presentations, and governance documents.
+IR Website Scraper — Scrapes Company Investor Relations Pages
+=============================================================
+
+Acquires annual reports, earnings presentations, and governance documents
+directly from company IR websites.
+
+References
+----------
+Richardson, L. (2007-2023). "Beautiful Soup." pypi.org/project/beautifulsoup4/.
+    HTML parsing for IR page document extraction; handles malformed markup
+    common on legacy corporate websites.
+Loughran, T., & McDonald, B. (2016). "Textual Analysis in Accounting and
+    Finance: A Survey." Journal of Accounting Research, 54(4), 1187-1230.
+    Annual reports as primary source for textual fraud detection; IR scraping
+    provides direct access to the most complete versions.
+Playwright / Selenium — JavaScript-rendered IR pages requiring browser
+    automation for dynamic content (used as optional enhancement).
+
+Standards / Specifications
+--------------------------
+SEBI LODR Regulation 46(2) — IR page must contain: financial results, annual
+    reports, shareholding patterns, contact of compliance officer, policies,
+    and press releases.
+
+Architecture / Data Flow
+------------------------
+Scraping priority: PDF links (annual reports) → XLSX links (financial data) →
+    investor presentations → earnings call transcripts.
+Respects robots.txt.
+User-Agent: "ForensicAI/1.0 (research; contact: compliance@forensic-ai.internal)".
+Documents are classified by keyword matching against _DOC_KEYWORDS and saved
+with year-prefixed filenames for downstream processing.
 """
 
 from __future__ import annotations

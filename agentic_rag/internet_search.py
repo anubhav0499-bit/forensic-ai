@@ -1,12 +1,36 @@
 """
-Internet Search Tool for the Agentic RAG pipeline.
+Internet Search Tool — Agentic RAG Pipeline
+============================================
 
-Provider cascade:
-  1. Tavily          — best for analytical / financial queries; set TAVILY_API_KEY
-  2. DuckDuckGo      — free, no API key required; uses langchain-community
-  3. Serper/Google   — set SERPER_API_KEY for Google search via Serper.dev
-  4. SerpAPI         — set SERPAPI_API_KEY
-  5. httpx fallback  — direct HTTP fetch for well-known financial portals
+References
+----------
+Nakano, R., et al. (2021). "WebGPT: Browser-assisted Question-Answering with
+    Human Feedback." arXiv:2112.09332.
+    Motivates internet-augmented LLM for real-time forensic evidence gathering
+    beyond static document knowledge.
+Tavily AI (2023). "Tavily Search API." tavily.com.
+    Research-focused search API optimized for factual queries; used as primary
+    internet source with domain filtering for financial portals.
+Serper (2023). "Serper API." serper.dev.
+    Google Search API wrapper; fallback when Tavily is unavailable.
+SerpAPI (2023). "SerpAPI: Google Search Results API." serpapi.com.
+    Secondary fallback; structured SERP extraction.
+Edge, D., et al. (2024). "From Local to Global: A Graph RAG Approach to
+    Question Answering over Large Text Corpora." arXiv:2404.16130.
+    Internet retrieval extends local document knowledge to real-time regulatory
+    orders and analyst reports not present in the local corpus.
+
+Architecture / Data Flow
+------------------------
+Use cases: SEBI enforcement actions (not in local knowledge base), recent
+credit rating downgrades, management resignations, short-seller reports,
+court orders, news of regulatory investigations.
+Provider cascade (graceful degradation):
+  1. Tavily      — set TAVILY_API_KEY; best for analytical / financial queries
+  2. DuckDuckGo  — free, no API key required; uses langchain-community
+  3. Serper/Google — set SERPER_API_KEY for Google search via Serper.dev
+  4. SerpAPI     — set SERPAPI_API_KEY
+  5. httpx fallback — direct HTTP fetch for well-known financial portals
 """
 
 from __future__ import annotations

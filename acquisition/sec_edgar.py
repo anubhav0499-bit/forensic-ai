@@ -1,5 +1,35 @@
 """
-SEC EDGAR Client - Full document acquisition for US-listed companies
+SEC EDGAR Client — Full Document Acquisition for US-Listed Companies
+=====================================================================
+
+References
+----------
+SEC EDGAR Full-Text Search API (2024). efts.sec.gov/LATEST/search-index —
+    Full-text search across all public filings since 1994.
+SEC EDGAR Filing API (2024). data.sec.gov/submissions/{CIK}.json —
+    Filing history, form types, dates for any registered entity.
+SEC EDGAR XBRL Facts API (2024).
+    data.sec.gov/api/xbrl/companyfacts/{CIK}.json — Structured financial
+    data (income statement, balance sheet, cash flow) in JSON; most reliable
+    source for US company financials.
+Loughran, T., & McDonald, B. (2011). "When Is a Liability Not a Liability?
+    Textual Analysis, Dictionaries, and 10-Ks." Journal of Finance, 66(1).
+    10-K text forms basis for NLP analysis downstream in the forensic pipeline.
+SEC AAER database — Accounting and Auditing Enforcement Releases;
+    enforcement actions linked to financial misstatements.
+
+Standards / Specifications
+--------------------------
+SEC Rule 10-K — Annual report requirement: Item 8 = financial statements;
+    Item 9A = internal controls; Item 1A = risk factors.
+
+Architecture / Data Flow
+------------------------
+Documents acquired: 10-K (annual), 10-Q (quarterly), 8-K (material events),
+    DEF 14A (proxy), Form 4 (insider transactions), AAER enforcement orders.
+XBRL extraction maps standard us-gaap taxonomy concepts to the platform's
+    internal financial model fields (revenue, pat, total_assets, cfo, etc.).
+
 Free API: https://www.sec.gov/cgi-bin/browse-edgar
 XBRL Financial Facts: https://data.sec.gov/api/xbrl/companyfacts/{CIK}.json
 """

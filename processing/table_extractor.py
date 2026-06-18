@@ -1,6 +1,38 @@
 """
-Table Extractor - Financial table extraction with Camelot and Tabula
-Specialized for income statements, balance sheets, and cash flow statements
+Table Extractor — Financial Table Extraction with Camelot and Tabula
+====================================================================
+
+References
+----------
+Camelot (2019-2023). camelot-py.readthedocs.io.
+    PDF table extraction via lattice (ruled-line) and stream (whitespace)
+    modes; optimized for income statements and balance sheets found in
+    Indian and US annual reports.
+Tabula-py (Miwa, C., 2016-2023). pypi.org/project/tabula-py/.
+    Java-based PDF table extractor; fallback when Camelot fails on complex
+    bordered tables or multi-page tables.
+
+Standards / Specifications
+--------------------------
+Ind AS 1 / IAS 1 (IASB) — Presentation of Financial Statements: standardized
+    financial statement structure that TableExtractor targets (revenue,
+    EBITDA, PAT, total assets, CFO).
+SEBI LODR Regulation 33 Format — Mandated format for quarterly results;
+    TableExtractor parses SEBI-format result announcements.
+
+Architecture / Data Flow
+------------------------
+Extraction cascade: Camelot lattice → Camelot stream → Tabula.
+Tables are classified into statement types by keyword scoring, then rows
+are fuzzy-matched to known metric names via fuzzywuzzy.
+Target tables:
+  - Income statement  : revenue, EBITDA, PBT, PAT
+  - Balance sheet     : total assets, equity, debt
+  - Cash flow         : CFO, CFI, CFF
+  - Segment results
+  - Related party schedule
+
+Specialized for income statements, balance sheets, and cash flow statements.
 """
 
 from __future__ import annotations

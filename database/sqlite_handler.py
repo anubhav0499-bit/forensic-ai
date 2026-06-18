@@ -1,5 +1,28 @@
 """
-SQLite Handler - Transactional storage for all investigation data
+SQLite Handler — Transactional Storage for All Investigation Data
+=================================================================
+
+References
+----------
+Hipp, D. R. (2000-2023). "SQLite: A Self-Contained, Serverless,
+    Zero-Configuration, Transactional SQL Database Engine." sqlite.org.
+    ACID transactions; WAL mode for concurrent reads during parallel
+    agent execution.
+
+Standards / Specifications
+--------------------------
+ISA 230 / SA 230 — Audit Documentation: all findings persisted to SQLite
+    enable complete audit trail reconstruction for any investigation.
+Companies Act 2013 §134(5)(e) — Internal financial controls documentation;
+    the SQLite audit trail supports compliance evidence preservation.
+
+Architecture / Data Flow
+------------------------
+Primary transactional store for all investigation data — company profiles,
+agent results, findings (RED_FLAG / GREEN_FLAG), audit trail entries, document
+metadata, forensic scores.  WAL (Write-Ahead Logging) mode is enabled at
+connection time to allow concurrent agent writes during Phase B parallel
+execution without blocking read queries.
 """
 
 from __future__ import annotations

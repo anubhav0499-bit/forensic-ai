@@ -1,5 +1,34 @@
 """
-India Markets Client - NSE/BSE document acquisition
+India Markets Client — NSE/BSE Document Acquisition
+=====================================================
+
+References
+----------
+NSE India EDGAR (2023). nseindia.com — Archives of annual reports, quarterly
+    results, shareholding patterns, board meeting outcomes.
+BSE India Filing System (2023). bseindia.com — Corporate announcements, AGM
+    notices, RPT disclosures, auditor reports.
+Screener.in (2023). screener.in — Aggregated NSE/BSE financial data;
+    balance sheet, P&L, cash flow available via API/scraping; 10-year history.
+
+Standards / Specifications
+--------------------------
+SEBI LODR Regulation 33 — Quarterly financial results must be filed within
+    45 days (standalone) / 60 days (consolidated) of quarter end.
+SEBI LODR Regulation 34 — Annual report filing mandatory; integrated
+    reporting encouraged.
+SEBI LODR Regulation 31 — Shareholding pattern (promoter / institutional /
+    public) filed quarterly.
+
+Architecture / Data Flow
+------------------------
+Documents acquired:
+  - Annual reports (DRHP, Annual Report PDFs)
+  - Quarterly results (board meeting PDFs)
+  - Shareholding pattern (quarterly promoter / FII / DII breakdowns)
+  - Corporate announcements and related party transaction schedules
+  - Screener.in structured financial data (10-year history)
+
 Sources: NSE EDGAR, BSE filing system, Screener.in
 """
 

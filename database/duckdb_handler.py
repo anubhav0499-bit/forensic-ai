@@ -1,6 +1,26 @@
 """
-DuckDB Handler - Analytics engine for financial trend analysis
-DuckDB excels at column-oriented aggregations across multi-year data
+DuckDB Handler — Analytics Engine for Financial Trend Analysis
+==============================================================
+
+References
+----------
+Mühleisen, H., Raasveldt, M., Boncz, P., & Kersten, M. (2019).
+    "DuckDB: an Embeddable Analytical Data Management System."
+    SIGMOD 2019 Companion, 1-2.
+    Column-oriented OLAP engine embedded in Python; vectorized execution
+    for aggregations over multi-year financial time series.
+Raasveldt, M., & Mühleisen, H. (2019).
+    "DuckDB: An Embeddable Analytical Data Management System." VLDB 2019.
+
+Architecture / Data Flow
+------------------------
+Analytical engine for cross-year financial trend queries (e.g., 5-year CAGR,
+ratio time series, cross-agent correlation).  Complements SQLite (transactional
+OLTP) with columnar aggregation performance.  Used by forensic scorers for
+multi-year rolling window calculations such as revenue CAGR, margin trends,
+and working capital cycle changes.
+
+DuckDB excels at column-oriented aggregations across multi-year data.
 """
 
 from __future__ import annotations
