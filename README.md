@@ -1,7 +1,7 @@
 # Forensic AI — Autonomous Forensic Accounting Platform
 
-**Institutional-grade 18-agent autonomous forensic accounting system.**  
-Give it a company name. It downloads public filings, runs 18 specialist AI agents across a multi-layer RAG pipeline, and returns a 0–100 risk score, an investment verdict, and full PDF/DOCX/XLSX/JSON reports.
+**Institutional-grade 17-agent autonomous forensic accounting system.**  
+Give it a company name. It downloads public filings, runs 17 specialist AI agents across a multi-layer RAG pipeline, and returns a 0–100 risk score, an investment verdict, and full PDF/DOCX/XLSX/JSON reports.
 
 ---
 
@@ -10,7 +10,7 @@ Give it a company name. It downloads public filings, runs 18 specialist AI agent
 1. [What It Does](#1-what-it-does)
 2. [System Architecture](#2-system-architecture)
 3. [RAG Pipeline — 13 Advanced Modules](#3-rag-pipeline)
-4. [18 Specialist Agents](#4-18-specialist-agents)
+4. [17 Specialist Agents](#4-18-specialist-agents)
 5. [Choose Your Setup Path](#5-choose-your-setup-path)
 6. [Path A — Google Colab (Free, No Install)](#6-path-a--google-colab-free-no-install)
 7. [Path B — Local with Cloud API](#7-path-b--local-with-cloud-api)
@@ -37,7 +37,7 @@ Your input
     → PDF parsing + financial table extraction
     → Core Knowledge Base (5-layer: global standards, Indian regulations, fraud library)
     → Hybrid RAG (FAISS + ChromaDB + BM25 + BGE embeddings + Multi-Vector + RRF)
-    → 18 specialist AI agents in 4 phases
+    → 17 specialist AI agents in 4 phases
     → Cross-validation of financial statements (10 internal consistency rules)
     → Guardrails (groundedness + hallucination detection + standard validation)
     → RAGAS evaluation of context quality
@@ -82,7 +82,7 @@ Your input
 │  ISA/SA/PCAOB standards · SEBI/MCA regulations · Fraud case library (10) │
 │  Reasoning framework · Audit procedure templates · Agent-to-standard map  │
 ├───────────────────────────────────────────────────────────────────────────┤
-│                         18-AGENT LAYER                                    │
+│                         17-AGENT LAYER                                    │
 │                                                                           │
 │  Phase A         Phase B (8 agents, parallel)       Phase C (parallel)   │
 │  ---------       --------------------------------    ------------------- │
@@ -221,7 +221,7 @@ Injected into every agent's LLM call via `get_agent_knowledge_block(agent_id)`:
 
 ---
 
-## 4. 18 Specialist Agents
+## 4. 17 Specialist Agents
 
 ### Phase A — Forensic Baseline (Sequential, First)
 
