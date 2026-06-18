@@ -1,5 +1,31 @@
 """
 LangGraph State Schema — Agentic RAG 12-step loop.
+===================================================
+
+References
+----------
+LangGraph (LangChain Inc., 2024). TypedDict-based shared state; each node
+    receives the full state dict and returns only the fields it modifies
+    (partial update).
+
+Yao, S., et al. (2022). "ReAct: Synergizing Reasoning and Acting in
+    Language Models." ICLR 2023.
+    State fields track the ReAct loop: original_query → rewritten_query →
+    retrieved_context → response → is_relevant.
+
+Park, J. S., et al. (2023). "Generative Agents: Interactive Simulacra of
+    Human Behavior." UIST 2023.
+    State accumulates agent_id/agent_name to support future multi-agent
+    extensions.
+
+Architecture
+------------
+State fields: company_name, agent_name, agent_id, original_query,
+    financial_data, retriever (HybridRetriever for vector_db path),
+    rewritten_query, query_history, needs_more_details, selected_sources,
+    retrieved_context, source_citations, response, is_relevant,
+    relevance_score, iteration, max_iterations, final_response, findings,
+    risk_score.
 
 Diagram mapping:
   Step 1  → query_rewriter_node   (rewrite query)

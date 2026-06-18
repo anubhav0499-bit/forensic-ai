@@ -1,16 +1,52 @@
 """
 LangGraph Node Functions — Agentic RAG 12-step loop.
+=====================================================
 
 Each function takes the current AgenticRAGState and returns a dict of
 updated fields (LangGraph merges it with the existing state).
 
-Step mapping:
-  query_rewriter_node    → Steps 1-2
-  detail_checker_node    → Step 3
-  source_router_node     → Step 5
-  retriever_node         → Steps 6-7
-  generator_node         → Steps 8-9
-  relevance_checker_node → Steps 10-12
+References
+----------
+LangGraph (LangChain Inc., 2024). "LangGraph: Build stateful, multi-actor
+    applications with LLMs." github.com/langchain-ai/langgraph.
+    StateGraph with typed nodes, conditional edges, and cycle support.
+
+Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., & Cao, Y.
+    (2022). "ReAct: Synergizing Reasoning and Acting in Language Models."
+    ICLR 2023. arXiv:2210.03629.
+    ReAct loop implemented as query_rewriter → retriever → generator →
+    relevance_check (up to 3 iterations).
+
+Edge, D., Trinh, H., Cheng, N., et al. (2024). "From Local to Global:
+    A Graph RAG Approach to Query-Focused Summarization."
+    arXiv:2404.16130.
+    Source-routing pattern: classify query complexity → select retrieval
+    strategy.
+
+Ma, X., Wang, L., Yang, N., Wei, F., & Lin, J. (2023). "Query Rewriting
+    for Retrieval-Augmented Large Language Models." arXiv:2305.14283.
+    Query rewriter node rewrites original query for better retrieval
+    precision.
+
+Standards / Specifications
+--------------------------
+W3C SSE Specification (2021) — generator_node streams tokens via SSE when
+    streaming is enabled.
+
+Architecture
+------------
+  query_rewriter_node    — Steps 1-2: LLM rewrites query with financial
+                           context
+  detail_checker_node    — Step 3: decides if existing context is sufficient
+  source_router_node     — Step 5: routes to vector_db / internet /
+                           tools_api
+  retriever_node         — Steps 6-7: fetches context from selected sources;
+                           uses HybridRetriever when passed via state,
+                           LlamaIndex as fallback
+  generator_node         — Steps 8-9: builds forensic analysis prompt +
+                           calls primary LLM
+  relevance_checker_node — Steps 10-12: relevance gate; loops back to
+                           query_rewriter if NOT_RELEVANT
 """
 
 from __future__ import annotations

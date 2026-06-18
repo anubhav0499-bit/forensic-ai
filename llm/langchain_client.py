@@ -5,6 +5,32 @@ Wraps every major LLM provider under a single BaseChatModel interface.
 No "free-first" bias — all providers are equal. Priority is set by LLM_PROVIDER
 env var, with a full cascade fallback if set to "auto".
 
+References
+----------
+Chase, H. (2022). "LangChain." github.com/langchain-ai/langchain.
+    BaseChatModel abstraction; provider-specific wrappers (ChatOpenAI,
+    ChatAnthropic, ChatGoogleGenerativeAI, ChatGroq, etc.).
+
+Brown, T., et al. (2020). "Language Models are Few-Shot Learners."
+    NeurIPS 2020. arXiv:2005.14165.
+    Foundation for GPT-series provider integrations.
+
+Ouyang, L., et al. (2022). "Training Language Models to Follow Instructions
+    with Human Feedback." NeurIPS 2022. arXiv:2203.02155.
+    InstructGPT — basis for instruction-tuned models used across providers.
+
+Touvron, H., et al. (2023). "Llama 2: Open Foundation and Fine-Tuned Chat
+    Models." arXiv:2307.09288.
+    Llama-series models via Groq, Together, Ollama providers.
+
+Architecture
+------------
+Provider cascade order (auto mode): Groq (free-tier speed) → OpenAI →
+    Anthropic → Google/Gemini → Together → OpenRouter → Mistral → Cohere →
+    Bedrock → Azure → LM Studio → Ollama → HuggingFace.
+Supported: 14 providers, 2 model tiers per provider (primary + fast),
+    configurable via env vars.
+
 Supported providers (configure via .env):
   openai      OPENAI_API_KEY
   anthropic   ANTHROPIC_API_KEY

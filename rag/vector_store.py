@@ -1,5 +1,32 @@
 """
-ChromaDB Vector Store - Persistent embedding storage for forensic knowledge base
+ChromaDB Vector Store — Persistent embedding storage for forensic knowledge base
+=================================================================================
+
+References
+----------
+Chroma (2022). "Chroma: the AI-native open-source embedding database."
+    trychroma.com.
+    Persistent cosine-similarity vector store; collection-per-company
+    isolation.
+
+Johnson, J., Douze, M., & Jégou, H. (2019). "Billion-Scale Similarity
+    Search with GPUs." IEEE Transactions on Big Data, 7(3), 535-547.
+    FAISS underpins ChromaDB's HNSW index for approximate nearest neighbor
+    search.
+
+Xiao, S., Liu, Z., Zhang, P., & Muennighoff, N. (2023). "C-Pack: Packaged
+    Resources To Advance General Chinese Embedding." arXiv:2309.07597.
+    BAAI/bge-large-en-v1.5 embedding model used to encode document chunks.
+
+Reimers, N., & Gurevych, I. (2019). "Sentence-BERT: Sentence Embeddings
+    using Siamese BERT-Networks." EMNLP 2019. arXiv:1908.10084.
+    all-MiniLM-L6-v2 fallback embedding model.
+
+Architecture
+------------
+One Chroma collection per company (prefix: "forensic_ai_{company_slug}").
+Persistence at data/chroma_db/. Distance metric: cosine.
+Default n_results: 10.
 """
 
 from __future__ import annotations

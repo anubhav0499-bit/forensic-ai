@@ -3,6 +3,28 @@ LLM Manager — Universal multi-provider interface
 =================================================
 Legacy native client. For new Agentic RAG code, prefer llm/langchain_client.py.
 
+References
+----------
+LangChain (Chase 2022): New Agentic RAG code prefers llm/langchain_client.py;
+    this legacy module is kept for backward compatibility with agents that use
+    self.llm.generate().
+
+Ollama (2023). "Ollama: Get up and running with local LLMs." ollama.ai.
+    Local model support for air-gapped deployments.
+
+LM Studio (2023). "LM Studio: Discover, download, and run local LLMs."
+    lmstudio.ai. Alternative local inference via OpenAI-compatible API.
+
+Anthropic (2024). Claude API — claude-sonnet-4-6,
+    claude-haiku-4-5-20251001 supported via native SDK.
+
+Architecture
+------------
+Purpose: Pre-LangChain client; provides self.llm.generate(prompt, system,
+    max_tokens) interface consumed by BaseForensicAgent._analyze_with_llm()
+    and _analyze_and_extract(). For new code, use langchain_client.lc_invoke()
+    or get_langchain_llm() instead.
+
 Provider cascade in auto mode (first available key wins — all providers equal):
   1. OpenAI        — GPT-4o / GPT-4o-mini
   2. Anthropic     — Claude Sonnet / Haiku

@@ -1,6 +1,33 @@
 """
-BM25 Retriever - Keyword-based retrieval for exact financial term matching
+BM25 Retriever — Keyword-based retrieval for exact financial term matching
+==========================================================================
 Complements dense retrieval for precise financial metric lookup.
+
+References
+----------
+Robertson, S., & Zaragoza, H. (2009). "The Probabilistic Relevance
+    Framework: BM25 and Beyond." Foundations and Trends in Information
+    Retrieval, 3(4), 333-389.
+    BM25Okapi: term-frequency saturation (k1=1.5) + document-length
+    normalization (b=0.75).
+
+Jones, K. S., Walker, S., & Robertson, S. E. (2000). "A Probabilistic
+    Model of Information Retrieval." Information Processing & Management,
+    36(6), 779-808.
+    Original BM derivation underlying BM25.
+
+Loughran, T., & McDonald, B. (2011). "When Is a Liability Not a Liability?
+    Textual Analysis, Dictionaries, and 10-Ks." Journal of Finance, 66(1),
+    35-65.
+    Finance domain: BM25 excels on specialized vocabulary (EBITDA, NPA,
+    PCAOB, SEBI) absent from general-domain IDF tables.
+
+Architecture
+------------
+Role in hybrid retrieval: BM25 weight = 0.4 in the RRF fusion (vs. dense
+    FAISS weight 0.6). BM25 provides exact-match recall for financial terms;
+    dense retrieval provides semantic recall for paraphrased queries.
+    RRF k=60 (Cormack et al. 2009).
 """
 
 from __future__ import annotations
