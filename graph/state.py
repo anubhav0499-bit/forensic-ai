@@ -17,7 +17,7 @@ Diagram mapping:
 """
 
 from __future__ import annotations
-from typing import TypedDict, List, Optional
+from typing import Any, TypedDict, List, Optional
 
 
 class AgenticRAGState(TypedDict, total=False):
@@ -29,6 +29,7 @@ class AgenticRAGState(TypedDict, total=False):
     agent_id: int
     original_query: str
     financial_data: dict          # {fiscal_year: {metric: value}}
+    retriever: Any                # HybridRetriever instance passed from base_agent
 
     # ── Query rewriting (Steps 1-2) ────────────────────────────────────
     rewritten_query: str

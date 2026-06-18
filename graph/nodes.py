@@ -156,19 +156,35 @@ def retriever_node(state: AgenticRAGState) -> dict:
     context_parts: list[str] = []
     citations: list[str]     = []
 
-    # ── Vector DB (LlamaIndex) ─────────────────────────────────────────
+    # ── Vector DB (hybrid retriever passed from base_agent) ───────────
     if "vector_db" in sources:
-        try:
-            from agentic_rag.rag_pipeline import LlamaIndexRAGPipeline
-            pipeline = LlamaIndexRAGPipeline(company_name=company)
-            result   = pipeline.query(company, query)
-            if result.response:
-                context_parts.append(f"[INDEXED DOCUMENTS]\n{result.response}")
-                citations.extend(
-                    str(n.node.get_content()[:100]) for n in (result.source_nodes or [])[:3]
-                )
-        except Exception as exc:
-            logger.warning(f"[Retriever] vector_db failed: {exc}")
+        retriever = state.get("retriever")
+        if retriever is not None:
+            try:
+                results = retriever.search(company_name=company, query=query, n_results=8)
+                texts = [
+                    r.get("content", r.get("text", "")).strip()
+                    for r in results
+                    if r.get("content", r.get("text", "")).strip()
+                ]
+                if texts:
+                    context_parts.append("[INDEXED DOCUMENTS]\n" + "\n\n".join(texts))
+                    citations.extend(t[:100] for t in texts[:3])
+            except Exception as exc:
+                logger.warning(f"[Retriever] hybrid search failed: {exc}")
+        else:
+            # fallback: LlamaIndex when no retriever in state (standalone use)
+            try:
+                from agentic_rag.rag_pipeline import LlamaIndexRAGPipeline
+                pipeline = LlamaIndexRAGPipeline(company_name=company)
+                result   = pipeline.query(company, query)
+                if result.response:
+                    context_parts.append(f"[INDEXED DOCUMENTS]\n{result.response}")
+                    citations.extend(
+                        str(n.node.get_content()[:100]) for n in (result.source_nodes or [])[:3]
+                    )
+            except Exception as exc:
+                logger.warning(f"[Retriever] vector_db failed: {exc}")
 
     # ── Internet search ────────────────────────────────────────────────
     if "internet" in sources:

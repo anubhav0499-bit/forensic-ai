@@ -228,6 +228,7 @@ class BaseForensicAgent(ABC):
                 query=query,
                 financial_data=financial_data or {},
                 max_iterations=AGENTIC_RAG_CONFIG.max_iterations,
+                retriever=self.retriever,
             )
             raw_text = final_state.get("final_response") or final_state.get("response", "")
             harness_result = self._harness.extract(raw_text, company_name=company_name)

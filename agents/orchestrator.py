@@ -1,5 +1,5 @@
 """
-Forensic Orchestrator — 18-Agent Multi-Phase Workflow Controller
+Forensic Orchestrator — 17-Agent Multi-Phase Workflow Controller
 =================================================================
 
 References

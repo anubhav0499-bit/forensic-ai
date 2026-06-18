@@ -146,6 +146,7 @@ def run_agentic_rag(
     query: str,
     financial_data: dict | None = None,
     max_iterations: int = 3,
+    retriever=None,
 ) -> AgenticRAGState:
     """
     Run the full 12-step Agentic RAG pipeline for one agent query.
@@ -170,6 +171,7 @@ def run_agentic_rag(
         "original_query":   query,
         "rewritten_query":  query,
         "financial_data":   financial_data or {},
+        "retriever":        retriever,
         "query_history":    [],
         "needs_more_details": True,
         "selected_sources": [],
